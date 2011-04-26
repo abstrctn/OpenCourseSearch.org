@@ -1,0 +1,50 @@
+{% for r in results %}
+  <div class="result clearfix">
+    <div class="top clearfix">
+      <div class="top-top clearfix">
+        <p class="clearfix">
+          <div class="classification clearfix">
+            <p class="classif-name clearfix">{{ r.classification.name }}</p>
+            <p class="classif-code clearfix">{{ r.classification.code }}-{{ r.number }}</p>
+          </div>
+          <span class="name">{{ r.course_name }}</span>
+          <div class="clearfix level-college">
+            <p class="college">{{ r.college }}</p>
+            <p class="level">{{ r.level }}</p>
+          </div>
+        </p>
+      </div>
+      {% if r.description %}
+      <p class="description">
+        {{ r.description }}
+      </p>
+      {% endif %}
+    </div>
+    <ul class="clearfix">
+    {% for sec in r.section_set.all %}
+      <li class="clearfix {% cycle 'row1' 'row2' %}" section_id="{{ sec.id }}">
+        <p class="section">{{ sec.get_section }}&nbsp;</p>
+        <p class="open">{{ sec.is_open|yesno:"Open,Closed" }}&nbsp;</p>
+        <p class="days">{{ sec.days }}&nbsp;</p>
+        <p class="times">{{ sec.times }}&nbsp;</p>
+        <p class="notes">
+          {% if sec.class_name %}<span class="class_name">{{ sec.class_name }}</span>{% endif %}
+          {{ sec.notes }}
+        &nbsp;</p>
+        <p class="prof">{{ sec.prof }}&nbsp;</p>
+        <p class="units">#{{ sec.number }}<br />{{ sec.units }}&nbsp;</p>
+      </li>
+    {% endfor %}
+    </ul>
+  </div>
+{% endfor %}
+
+{% if page.has_next %}
+<div class="next-page" href="#" value="{{ page.next_page_number }}">
+  More
+</div>
+{% else %}
+<div class="no-next-page">
+  No more courses
+</div>
+{% endif %}

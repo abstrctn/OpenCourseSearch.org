@@ -1,0 +1,16 @@
+h1. OpenCourseSearch.org
+
+Latest version of Open Course Search, a scraper and website that provides an alternative frontend to university registrar listings.
+
+More info: http://nyu.opencoursesearch.org/about/
+
+Schools:
+  - NYU
+
+Requirements:
+  - Django
+  - BeautifulSoup
+  - pickle
+  - cookielib
+
+Contact: @moriogawa

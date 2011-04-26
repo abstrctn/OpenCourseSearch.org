@@ -1,0 +1,5 @@
+*.log
+*.pyc
+local_settings.py
+uwsgi/
+storage/

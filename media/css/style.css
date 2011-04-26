@@ -1,0 +1,355 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Lucida Grande, sans-serif;
+}
+
+.header {
+  width: 960px;
+  margin: 0 auto;
+  padding: 10px 0 0 0;
+}
+.header .logo {
+  float: left;
+  width: 460px;
+  height: 55px;
+  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/nyu.png') no-repeat;
+  font-size: 22px;
+  color: #333;
+}
+.header .total-count {
+  float: right;
+  text-align: right;
+  color: #444;
+  font-size: 13px;
+  margin-top: 7px;
+}
+
+#textsearch {
+  width: 951px;
+  height: 20px;
+  font-size: 17px;
+  padding: 2px;
+  margin: 8px 0 0 0;
+  color: #333;
+  background: #eee;
+}
+
+#results {
+  width: 960px;
+  margin: 10px auto 50px auto;
+}
+#results ul {
+  list-style: none;
+  display: block;
+  padding-top: 7px;
+}
+#results ul li {
+  padding: 6px;
+}
+#results ul li:hover {
+  cursor: pointer;
+}
+#results ul li.row1:hover {
+  background: #e5e5e5;
+}
+#results ul li.row2:hover {
+  background: #f4f4f4;
+}
+#results .result {
+  border: 1px solid #ccc;
+  margin: 8px 0;
+  padding: 8px;
+  font-size: 13px;
+}
+#results .result div.classification {
+  width: 175px;
+  margin-right: 10px;
+  float: left;
+}
+#results .result div.classification p.classif-name {
+  font-weight: bold;
+  font-size: 12px;
+}
+#results .result div.classification p.classif-code {
+  color: #555;
+  font-size: 12px;
+}
+#results .result .top-top {
+  background: #e1ecef;
+  padding: 8px;
+  margin: -8px -8px 0px -8px;
+}
+
+#results .result span.name {
+  width: 580px;
+  font-weight: bold;
+  float: left;
+  font-size: 14px;
+}
+#results .result p.description {
+  padding: 8px 0;
+}
+#results .result .section {
+  width: 60px;
+  float: left;
+}
+#results .result .level-college {
+  float: left;
+  width: 175px;
+}
+#results .result .level {
+  font-size: 12px;
+  text-align: left;
+}
+#results .result .college {
+  font-size: 12px;
+  text-align: left;
+}
+#results .result .open {
+  width: 60px;
+  float: left;
+}
+#results .result .days {
+  width: 60px;
+  float: left;
+}
+#results .result .times {
+  width: 80px;
+  float: left;
+}
+#results .result .notes {
+  width: 480px;
+  margin-right: 20px;
+  float: left;
+}
+#results .result .prof {
+  width: 100px;
+  float: left;
+  margin-right: 5px;
+}
+#results .result .units {
+  width: 60px;
+  float: left;
+}
+#results .result .class_name {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+#results .row1 {background: #eee;}
+
+.clearfix:after {
+  content: ".";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+ul.filters {
+  margin-top: 10px;
+  list-style: none;
+}
+ul.filters li {
+  float: left;
+}
+ul.filters li.remove-hover {
+  cursor: pointer;
+}
+ul.filters li.remove-hover span.name {
+  text-decoration: line-through;
+  color: #a63737;
+  font-weight: bold;
+}
+ul.filters li.remove-hover span.remove {
+  font-weight: bold;
+  color: #000;
+}
+ul.filters li.fil-level, ul.filters li.fil-level select {
+  width: 110px;
+  margin-right: 55px;
+}
+ul.filters li.fil-college, ul.filters li.fil-college select {
+  width: 374px;
+  margin-right: 56px;
+}
+ul.filters li.fil-subject, ul.filters li.fil-subject select {
+  width: 360px;
+}
+ul.filters li span {
+  position: relative;
+}
+ul.filters li span.remove {
+  float: right;
+  color: #666;
+  text-align: right;
+  padding: 0;
+}
+
+.searchfilters {
+  width: 960px;
+  margin: 0 auto;
+}
+
+.next-page {
+  color: #333;
+  padding: 8px;
+  width: 942px;
+  height: 20px;
+  font-size: 18px;
+  text-align: center;
+  border: 1px solid #aaa;
+  background: #eee;
+}
+.next-page:hover {
+  background: #ddd;
+  cursor: pointer;
+}
+.no-next-page {
+  color: #333;
+  padding: 8px;
+  width: 942px;
+  height: 20px;
+  font-size: 18px;
+  text-align: center;
+}
+
+ul.nav {
+  list-style: none;
+  float: left;
+  margin-top: 25px;
+}
+ul.nav li {
+  float: left;
+  margin-right: 10px;
+}
+ul.nav li a {
+  color: #333;
+  font-size: 14px;
+}
+ul.nav li a:hover {
+  color: #eee;
+  background: #222;
+}
+
+.bodycontent {
+  margin: 55px auto 0 auto;
+  width: 680px;
+  padding-right: 280px;
+  font-family: Georgia, sans-serif;
+  font-size: 15px;
+  line-height: 19px;
+  margin-bottom: 30px;
+}
+.bodycontent p {
+  margin-bottom: 8px;
+}
+
+.license-box {
+  margin-top: 25px;
+  text-align: center;
+  /*border: 1px solid #555;*/
+  padding: 10px;
+}
+.license-box a {
+  color: #333;
+}
+.social {
+  margin-top: 4px;
+  float: right;
+  text-align: right;
+}
+
+#inbox {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  left: 0;
+}
+#inbox .outer {
+  width: 615px;
+  height: 1px;
+  margin: 0 auto;
+  position: relative;
+}
+#inbox .container {
+  position: absolute;
+  width: 615px;
+  bottom: 0;
+  background: #eee;
+  border: 2px solid #555;
+  padding: 4px;
+}
+#inbox .container.hide {
+  height: 18px;
+  background: #888;
+}
+#inbox .container .handle {
+  background: #888;
+  height: 18px;
+  padding: 3px 0;
+  width: 100%;
+  color: #eee;
+  font-size: 13px;
+}
+#inbox .container .handle:hover {
+  background: #666;
+  cursor: pointer;
+}
+#inbox .container .handle span {
+  padding: 0 5px;
+  float: left;
+}
+#inbox .container .handle span.undo {
+  float: right;
+}
+#inbox .container ul {
+  list-style: none;
+}
+#inbox .container ul li {
+  border-bottom: 1px solid #aaa;
+  padding: 4px;
+}
+#inbox .container ul li:hover {
+  background: #ccc;
+}
+#inbox .container ul li.warning {
+  background: #d48f8f;
+}
+#inbox .container ul li span {
+  float: left;
+  font-size: 12px;
+}
+#inbox .container ul li .classification {
+  color: #444;
+  width: 160px;
+  margin-right: 5px;
+}
+#inbox .container ul li .number {
+  color: #444;
+  width: 50px;
+  margin-right: 5px;
+}
+#inbox .container ul li .name {
+  font-size: 13px;
+  font-weight: bold;
+  color: #222;
+  width: 260px;
+  margin-right: 5px;
+}
+#inbox .container ul li .name:hover {
+  cursor: pointer;
+}
+#inbox .container ul li .section {
+  width: 100px;
+  margin-right: 5px;
+}
+#inbox .container ul li .remove {
+  color: #333;
+  width: 15px;
+  cursor: pointer;
+}
