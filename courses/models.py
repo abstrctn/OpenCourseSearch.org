@@ -7,9 +7,18 @@ class Note(models.Model):
 
 class College(models.Model):
   name = models.CharField(max_length=255)
+  short_name = models.CharField(max_length=255)
   level = models.CharField(max_length=20)
   
   def __unicode__(self):
+    return self.name
+  
+  class Meta:
+    ordering = ('id',)
+  
+  def get_short_name(self):
+    if self.short_name:
+      return self.short_name
     return self.name
 
 class Session(models.Model):
@@ -31,6 +40,15 @@ class Classification(models.Model):
   
   class Meta:
     ordering = ('name',)
+  
+  def get_level(self):
+    if self.code[-2] == 'U':
+      return "Undergraduate"
+    elif self.code[-2] in ['G', 'D']:
+      return "Graduate"
+    elif self.code[-2] == 'A':
+      return "NYUAD"
+    return
 
 class Course(models.Model):
   updated_at = models.DateTimeField(default=datetime.datetime.now())
@@ -42,25 +60,32 @@ class Course(models.Model):
   number = models.IntegerField()                  # 200
   
   description = models.TextField(blank=True)
-  level = models.CharField(max_length=20)         # Undergraduate
+  level = models.CharField(max_length=100)        # Undergraduate
   component = models.CharField(max_length=20)     # Lecture, Recitation
   grading = models.CharField(max_length=20)       # CAS Graded
   location_code = models.CharField(max_length=10) # WS
   course_name = models.CharField(max_length=255)  # Animals & Society
-  prof = models.CharField(max_length=100)
+  profs = models.TextField()
   
   def __unicode__(self):
     return "%s-%s" % (self.classification, self.number)
   
   class Meta:
     ordering = ('classification', 'number')
+  
+  def save(self):
+    sections = self.section_set.all()
+    profs = [s.prof for s in sections]
+    self.profs = " ".join(profs)
+    return super(Course, self).save()
 
 class Section(models.Model):
   updated_at = models.DateTimeField(default=datetime.datetime.now())
   
   course = models.ForeignKey(Course)
   
-  is_open = models.BooleanField()                 # Open
+  #is_open = models.BooleanField()                 # Open
+  is_open = models.CharField(max_length=20)
   number = models.CharField(max_length=20)
   class_name = models.CharField(max_length=255, blank=True)   # Topics: Animal Minds
   notes = models.TextField(blank=True)        

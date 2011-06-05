@@ -291,7 +291,10 @@ class Scraper:
           'index': index}
   
   def process_section(self, id):
-    id = self.sections[id][0]
+    try:
+      id = self.sections[id][0]
+    except:
+      return
     hold = len(self.classes.keys())
     ICStateNum = self.get_section_listing(id) + 1
     keys = {}
@@ -304,6 +307,7 @@ class Scraper:
       if ind:
         print "  grabbing course %s of %s..." % (i + 1, total)
         self.get_detail_for_course_in_section(id, ind, ICStateNum)
+        time.sleep(8)
     print "%s classes processed" % (len(self.classes.keys()) - hold)
     print "%s total classes scraped" % len(self.classes.keys())
     f = open('%s%s.txt' % (self.DUMP_DIR, id), 'w')
@@ -337,12 +341,15 @@ class Scraper:
     page = r.read()
     soup = BeautifulSoup.BeautifulSoup(page)
     
-    self.summarize_detail(id, soup)
+    try:
+      self.summarize_detail(id, soup)
+    except:
+      print "fail"
   
   def summarize_detail(self, id, soup):
     tables = soup.find('table', {'class': 'PSLEVEL3SCROLLAREABODY'}).findAll('table', {'class': 'PSGROUPBOX', 'width': '531'})
-    notes = ''
     for table in tables:
+      notes = ''
       datacell = table.find('td', {'style': 'background-color: white; font-family: arial; font-size: 12px;'})
       self.datacell = datacell
       
@@ -358,7 +365,7 @@ class Scraper:
         classification = " ".join(bits[:-1])
         class_name = ''
       try:
-        units = re.search('([-\w]+ units)', "%s" % datacell).groups()[0]
+        units = re.search('([\w]+( - )?[\w]+ units)', "%s" % datacell).groups()[0]
       except:
         try:
           # leftover units from previous session of same class, use

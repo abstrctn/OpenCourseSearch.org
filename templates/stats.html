@@ -1,0 +1,31 @@
+{% load humanize %}
+<div class="boxes clearfix">
+{% if total_results == total_sections %}
+  <h1>Out of {{ total_results|intcomma }} sections in NYU's Fall 2011 registration...</h1>
+{% else %}
+  <h1>Out of {{ total_results|intcomma }} sections in: <span class="crumbs">{{ crumbs }}</span>...</h1>
+{% endif %}
+  
+
+{% for boxtype in availability.boxes %}
+  <div class="box {{ boxtype }}"></div>
+{% endfor %}
+</div>
+<div class="key clearfix"><div class="box"></div> = {{ availability.box_value }} session{{ availability.box_value|pluralize }}</div>
+<div class="info">
+  <p><span class="open">{{ availability.open.count|intcomma }}</span> session{% if availability.open.count == 1 %} is{% else %}s are{% endif %} still open.</p>
+  <p><span class="wait">{{ availability.wait.count|intcomma }}</span> session{% if availability.wait.count == 1 %} is{% else %}s are{% endif %} waitlisted.</p>
+  <p><span class="closed">{{ availability.closed.count|intcomma }}</span> session{% if availability.closed.count == 1 %} is{% else %}s are{% endif %} closed.</p>
+  <p><span class="unknown">{{ availability.unknown.count|intcomma }}</span> session{% if availability.unknown.count == 1 %} is{% else %}s are{% endif %} unknown.</p>
+{% if total_results != total_sections %}
+  <p class="pressenter">Press enter to see them</p>
+{% endif %}
+</div>
+{% comment %}
+<div class="bar clearfix">
+  <div class="element open" style="width: {{ availability.open.percentage }}%;"></div>
+  <div class="element unknown" style="width: {{ availability.unknown.percentage }}%;"></div>
+  <div class="element wait" style="width: {{ availability.wait.percentage }}%;"></div>
+  <div class="element closed" style="width: {{ availability.closed.percentage }}%;"></div>
+</div>
+{% endcomment %}

@@ -6,15 +6,260 @@
 
   <meta name="title" content="nyu.OpenCourseSearch.org" />
   <meta name="description" content="The more sensible search option for university course listings" />
-  <meta name="keywords" content="opencoursesearch, open course search, opencoursesearch.org, nyu.opencoursesearch.org, nyu, registrar, listing" />
+  <meta name="keywords" content="opencoursesearch, open course search, opencoursesearch.org, nyu.opencoursesearch.org, Albert, nyu, registrar, listing" />
   <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
   <meta name="medium" content="news" />
   <link rel="image_src" href="http://opencoursesearch.org.s3.amazonaws.com/logos/nyu.png" />
 
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js" type="text/javascript"></script>
-  <script src="http://opencoursesearch.org.s3.amazonaws.com/js/scripts.js" type="text/javascript"></script>
+  <!--<script src="http://opencoursesearch.org.s3.amazonaws.com/js/scripts.js" type="text/javascript"></script>-->
   
   <link rel="stylesheet" type="text/css" href="http://opencoursesearch.org.s3.amazonaws.com/css/style.css">
+
+<script type="text/javascript">
+if (location.href.indexOf('http://www.opencoursesearch.org') == 0)
+  window.location = 'http://nyu.opencoursesearch.org';
+if (location.href.indexOf('http://opencoursesearch.org') == 0)
+  window.location = 'http://nyu.opencoursesearch.org';
+
+$(document).ready(function() {
+  update.subjects_hold = $('#subject option');
+  $('.text-searcher').change(function() {
+    update.call(1);
+  });
+  $('.drop-searcher').change(function() {
+    if (!update.active)
+      update.activate();
+    update.call(1);
+  });
+  $('#college').change(function() {
+    id = $('#college option:selected')[0].value;
+    $('#subject option').remove();
+    $('#subject').append(update.subjects_hold);
+    $('#subject > option[college!=' + id + ']').remove();
+    $('#subject').prepend(update.subjects_hold[0]);
+    $('#subject').val('-');
+    update.call(1);
+  });
+  $('.next-page').live('click', function() {
+    page = $(this).attr('value');
+    update.call(page);
+    return false;
+  });
+  $('ul.filters span').hover(
+    function() {
+      $(this).parent().addClass('remove-hover');
+    },
+    function() {
+      $(this).parent().removeClass('remove-hover');
+    }
+  );
+  $('ul.filters span').click(function() {
+    $(this).parent().find('select').val('-');
+    update.call(1);
+  });
+  if ($('#textsearch').length == 1)
+    interval = setInterval('checkTextSearch();', 500)
+  
+  inbox.load();
+  $("#results ul li").live('click', function() {
+    id = $(this).attr('section_id');
+    inbox.add(id);
+  });
+  $("#inbox .handle").live('click', function() {
+    $("#inbox .container").toggleClass('hide');
+  });
+  $("#inbox ul li .remove").live('hover', function() {
+    $(this).parent().toggleClass('warning');
+  });
+  $("#inbox ul li .remove").live('click', function() {
+    id = $(this).parent().attr('section_id');
+    inbox.remove(id);
+  });
+  $("#inbox .undo").live('click', function() {
+    id = $(this).attr('section_id');
+    inbox.add(id);
+    return false;
+  });
+  $("#inbox .name").live('click', function() {
+    id = $(this).parent().attr('course_id');
+    // clear other filters, or we might not be able to see this class
+    $("#level").val('-');
+    $("#college").val('-');
+    $("#subject").val('-');
+    $("#textsearch").val(id);
+  });
+
+  // show data viz by default
+  update_stats.call();
+  $('.colleges .option').live('click', function() {
+    act = $(this).hasClass('active');
+    $('.colleges .option').removeClass('active');
+    $('.subjects .option').removeClass('active');
+    if (!act) {
+      $(this).addClass('active');
+      id = $(this).attr('college_id');
+      $('.subjects .option[college=' + id + ']').show();
+      $('.subjects .option[college!=' + id + ']').hide();
+    } else {
+      // unselecting a college - show everything
+      $('.subjects .option').show();
+    }
+    update_stats.call();
+  });
+  $('.subjects .option').live('click', function() {
+    act = $(this).hasClass('active');
+    $('.subjects .option').removeClass('active');
+    if (!act)
+      $(this).addClass('active');
+    update_stats.call();
+  });
+  $('.boxes .box').live('click', function() {
+  });
+
+});
+
+update = {
+  url: '/do_search/',
+  search_text: 'Search (subject, professor, keyword...)',
+  active: false,
+  activate: function() {
+    update.active = true;
+    
+    // transfer data viz selections to search selections
+    if ($('.stats-selectors .colleges .option.active').length > 0) {
+      id = $('.stats-selectors .colleges .option.active').attr('college_id');
+      $('#college').val(id);
+    }
+    if ($('.stats-selectors .subjects .option.active').length > 0) {
+      id = $('.stats-selectors .subjects .option.active').attr('subject_id');
+      $('#subject').val(id);
+    }
+    
+    $('.stats-selectors, #results').fadeOut('slow', function() {
+      $(this).hide();
+      $('#results').html('');
+      $('#results').fadeIn('slow', function() {
+        
+        //$('#results').fadeIn('slow');
+      });
+    }).slideUp('slow');
+  },
+  deactivate: function() {
+    update.active = false;
+    $('#results').fadeOut('slow', function() {
+      $(this).hide();
+      $('#results').html('').show();
+      // deactive stats selectors / clean slate
+      $('.stats-selectors .option').removeClass('active').show();
+      $('.stats-selectors').fadeIn('slow', function() {
+        
+        update_stats.call();
+        //$('#results').fadeIn('slow');
+      });
+    }).slideUp('slow');
+  },
+  call: function(page) {
+    if (!update.active)
+      return;
+    text = $('#textsearch')[0].value;
+    if (text == update.search_text)
+      text = '';
+    data = {
+      'level': $('#level option:selected')[0].value.replace('-', ''),
+      'college': $('#college option:selected')[0].value.replace('-', ''),
+      'subject': $('#subject option:selected')[0].value.replace('-', ''),
+      'text': text,
+      'page': page,
+    };
+    if (text == '' && data['level'] == '' && data['college'] == '' && data['subject'] == '') {
+      // return to data viz
+      update.deactivate();
+      return;
+    }
+    $.get(update.url, data, function(result) {
+      if (page == 1)
+        $("#results").html(result);
+      else {
+        $(".next-page").remove();
+        $("#results").append(result);
+      }
+    });
+  },
+  subjects_hold: null,
+};
+inbox = {
+  load: function() {
+    $.ajax({
+      url: '/inbox/load/',
+      success: function(result) {
+        $("#inbox").html(result);
+      }
+    });
+  },
+  add: function(id) {
+    $.ajax({
+      url: '/inbox/add/',
+      data: {'id': id},
+      success: function(result) {
+        $("#inbox").html(result);
+      }
+    });
+  },
+  remove: function(id) {
+    $.ajax({
+      url: '/inbox/remove/',
+      data: {'id': id},
+      success: function(result) {
+        $("#inbox").html(result);
+      }
+    });
+  },
+};
+update_stats = {
+  url: '/stats/search/',
+  call: function() {
+    $('#results').addClass('loading');
+    college = $('.colleges .option.active').attr('college_id');
+    if (college == undefined)
+      college = '';
+    subject = $('.subjects .option.active').attr('subject_id');
+    if (subject == undefined)
+      subject = '';
+    data = {
+      /*'level': $('#level option:selected')[0].value.replace('-', ''),*/
+      'college': college,
+      'subject': subject,
+    };
+    $.get(update_stats.url, data, function(result) {
+      $("#results").html(result).removeClass('loading');
+      // show results on enter, only if in a sub section
+      if (!(data['college'] == '' && data['subject'] == '')) {
+        $(window).bind('keydown', function(e) {
+          code = (e.keyCode ? e.keyCode : e.which);
+          if (code == 13) {
+            $(window).unbind('keydown');
+            if (!update.active)
+              update.activate();
+            update.call();
+          }
+        });
+      }
+    });
+  },
+};
+textHold = '';
+function checkTextSearch() {
+  val = $('#textsearch')[0].value;
+  if (val != textHold && val != update.search_text) {
+    if (!update.active)
+      update.activate();
+    textHold = val;
+    update.call(1);
+  };
+};
+
+</script>
   
 <script type="text/javascript">
 
@@ -51,6 +296,11 @@
       <li><a href="/code/">Code</a></li>
       <li><a href="/comments/">Comments/Bugs</a></li>
     </ul>
+    
+  </div>
+  <div class="tagline clearfix" style="width: 960px; margin: 0 auto;">
+    <span style="float: right; font-size: 13px; margin-top: 4px;">Fall 2011 Course Search: {{ total_courses }} courses, {{ total_sections }} sections</span>
+    <span style="font-size: 13px; margin-top: 4px;">Open Course Search: NYU - A more sensible search solution</span>
   </div>
     
   {% block content %}

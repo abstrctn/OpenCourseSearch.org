@@ -22,9 +22,9 @@
     </div>
     <ul class="clearfix">
     {% for sec in r.section_set.all %}
-      <li class="clearfix {% cycle 'row1' 'row2' %}" section_id="{{ sec.id }}">
+      <li class="clearfix {% cycle 'row1' 'row2' %}{% if sec.is_open %} coursestatus-{{ sec.is_open|slugify }}{% endif %}" section_id="{{ sec.id }}">
         <p class="section">{{ sec.get_section }}&nbsp;</p>
-        <p class="open">{{ sec.is_open|yesno:"Open,Closed" }}&nbsp;</p>
+        <p class="open">{{ sec.is_open }}&nbsp;</p>
         <p class="days">{{ sec.days }}&nbsp;</p>
         <p class="times">{{ sec.times }}&nbsp;</p>
         <p class="notes">
@@ -32,7 +32,10 @@
           {{ sec.notes }}
         &nbsp;</p>
         <p class="prof">{{ sec.prof }}&nbsp;</p>
-        <p class="units">#{{ sec.number }}<br />{{ sec.units }}&nbsp;</p>
+        <p class="units">
+          #{{ sec.number }}<br />
+          {% if sec.units %}{{ sec.units }} credit{% if sec.units != '1' %}s{% endif %}{% endif %}
+        &nbsp;</p>
       </li>
     {% endfor %}
     </ul>

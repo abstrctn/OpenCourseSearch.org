@@ -34,7 +34,8 @@ $(document).ready(function() {
     $(this).parent().find('select').val('-');
     update.call(1);
   });
-  interval = setInterval('checkTextSearch();', 500)
+  if ($('#textsearch').length == 1)
+    interval = setInterval('checkTextSearch();', 500)
   
   inbox.load();
   $("#results ul li").live('click', function() {
@@ -58,16 +59,22 @@ $(document).ready(function() {
   });
   $("#inbox .name").live('click', function() {
     id = $(this).parent().attr('course_id');
+    // clear other filters, or we might not be able to see this class
+    $("#level").val('-');
+    $("#college").val('-');
+    $("#subject").val('-');
     $("#textsearch").val(id);
   });
 
 });
+
 update = {
-  url: '/search/',
+  url: '/do_search/',
+  search_text: 'Search (subject, professor, keyword...)',
   call: function(page) {
     text = $('#textsearch')[0].value;
-    if (text == 'Search')
-      text = ''
+    if (text == update.search_text)
+      text = '';
     data = {
       'level': $('#level option:selected')[0].value.replace('-', ''),
       'college': $('#college option:selected')[0].value.replace('-', ''),
@@ -85,7 +92,7 @@ update = {
     });
   },
   subjects_hold: null,
-}
+};
 inbox = {
   load: function() {
     $.ajax({
@@ -113,7 +120,7 @@ inbox = {
       }
     });
   },
-}
+};
 textHold = '';
 function checkTextSearch() {
   val = $('#textsearch')[0].value;

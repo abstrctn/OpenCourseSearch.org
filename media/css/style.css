@@ -14,8 +14,8 @@ body {
 }
 .header .logo {
   float: left;
-  width: 460px;
-  height: 55px;
+  width: 439px;
+  height: 44px;
   background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/nyu.png') no-repeat;
   font-size: 22px;
   color: #333;
@@ -141,6 +141,30 @@ body {
   margin-bottom: 3px;
 }
 #results .row1 {background: #eee;}
+#results ul li.coursestatus-open {}
+#results ul li.coursestatus-wait-list {
+  color: #888;
+}
+#results ul li.coursestatus-closed {
+  color: #888;
+}
+#results ul li.coursestatus-open .open {
+  color: #207829;
+}
+#results ul li.coursestatus-closed .open {
+  color: #782025;
+}
+
+.stats {
+  width: 960px;
+  margin: 0 auto;
+  font-family: Georgia, serif;
+}
+h1 {
+  font-size: 18px;
+  margin: 20px 0;
+  font-family: Lucida Grande, sans-serif;
+}
 
 .clearfix:after {
   content: ".";
@@ -220,7 +244,8 @@ ul.filters li span.remove {
 ul.nav {
   list-style: none;
   float: left;
-  margin-top: 25px;
+  margin-top: 17px;
+  margin-left: 10px;
 }
 ul.nav li {
   float: left;
@@ -352,4 +377,153 @@ ul.nav li a:hover {
   color: #333;
   width: 15px;
   cursor: pointer;
+}
+
+.stats .boxes {
+  width: 100%;
+  height: 179px;
+}
+
+.stats .boxes .box {
+  width: 14px;
+  height: 14px;
+  float: left;
+  opacity: 0.7;
+  margin: 0 1px 1px 0;
+}
+/*.stats .boxes .box:hover {
+  opacity: 1.0;
+  -moz-opacity: 1.0;
+  -webkit-opacity: 1.0;
+}*/
+.stats .key {
+  padding-top: 12px;
+  clear: left;
+  font-size: 12px;
+  color: #555;
+  float: right;
+  width: 100px;
+}
+.stats .key .box {
+  margin: 3px 5px 0 0px;
+  background: #aaa;
+  width: 10px;
+  height: 10px;
+  float: left;
+}
+.stats .boxes .open {
+  background: #0f8623;
+}
+.stats .boxes .closed {
+  background: #b01c1c;
+}
+.stats .boxes .wait {
+  background: #e0e300;
+  color: #e0e300;
+}
+.stats .boxes .unknown {
+  background: #aaa;
+  color: #aaa;
+}
+.bar {
+  width: 100%;
+  border-top: 1px solid #555;
+  border-bottom: 1px solid #555;
+}
+.bar .element {
+  float: left;
+  height: 40px;
+  border-left: 1px solid #555;
+}
+.stats .info {
+  clear: left;
+  font-size: 20px;
+  margin-top: 15px;
+}
+.stats .info p {
+  float: left;
+  width: 400px;
+}
+.stats .info span {
+  font-size: 24px;
+  font-weight: bold;
+}
+.stats .info .open {
+  background: #fff;
+  color: #0f8623;
+}
+.stats .info .closed {
+  background: #fff;
+  color: #b01c1c;
+}
+.stats .info .wait {
+  background: #fff;
+  color: #e0e300;
+}
+.stats .info .unknown {
+  background: #fff;
+  color: #aaa;
+}
+
+.stats .options {
+  margin-bottom: 30px;
+}
+.stats .options .option {
+  width: 118px;
+  height: 60px;
+  padding: 8px 6px;
+  border: 1px solid #aaa;
+  float: left;
+  border-radius: 6px;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  background: #eee;
+  text-align: center;
+  font-size: 13px;
+  margin: 0 5px 5px 0;
+}
+.stats .subjects.options .option {
+  font-size: 12px;
+  width: 101px;
+  height: 70px;
+  margin: 0 5px 5px 0;
+  padding: 8px 6px;
+}
+.stats .options .option:hover {
+  background: #ccc;
+  cursor: pointer;
+}
+.stats .options .option.active {
+  background:#afdef3;
+}
+.stats .options .sub-level {
+  margin-top: 5px;
+  color: #555;
+  font-size: 11px;
+}
+
+.stats .results {
+  min-height: 230px;
+}
+.stats .results.loading {
+  opacity: .5;
+  -moz-opacity: .5;
+  -webkit-opacity: .5;
+}
+.stats .results h1 {
+  border-top: 1px dashed #aaa;
+  padding-top: 10px;
+  margin: 10px 0 6px 0;
+}
+
+.filters.hide {
+  display: none;
+}
+h1 .crumbs {
+  font-size: 14px;
+}
+.pressenter {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #555;
 }
