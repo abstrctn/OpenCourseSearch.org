@@ -55,6 +55,23 @@ class Scraper:
     self.DUMP_DIR = storage_dir
     self.username = username
     self.password = password
+    self.params = {
+      'ICAction': '',
+      'ICChanged': '-1',
+      'ICElementNum': '0',
+      'ICFocus': '',
+      'ICResubmit': '0',
+      'ICSID': '1',
+      'ICSaveWarningFilter': '0',
+      'ICStateNum': '1',
+      'ICType': 'Panel',
+      'ICXPos': '0',
+      'ICYPos': '0',
+      'NYU_CLS_DERIVED_DESCR100': '',
+      'NYU_CLS_DERIVED_DESCR100_JOB_POST1': '',
+      'NYU_CLS_WRK_NYU_FALL': 'Y',
+      'NYU_CLS_WRK_NYU_FALL$chk': 'Y',
+    }
     
     self.start_index = start
     if end:
@@ -119,24 +136,8 @@ class Scraper:
     print "Browsing key found: %s" % self.ICSID
   
   def get_home(self):
-    params = {
-      'ICAction': 'NYU_CLS_DERIVED_BACK',
-      'ICChanged': '-1',
-      'ICElementNum': '0',
-      'ICFocus': '',
-      'ICResubmit': '0',
-      'ICSID': self.ICSID,
-      'ICSaveWarningFilter': '0',
-      'ICStateNum': '1',
-      'ICType': 'Panel',
-      'ICXPos': '0',
-      'ICYPos': '0',
-      'NYU_CLS_DERIVED_DESCR100': '',
-      'NYU_CLS_DERIVED_DESCR100_JOB_POST1': '',
-      'NYU_CLS_WRK_NYU_FALL': 'Y',
-      'NYU_CLS_WRK_NYU_FALL$chk': 'Y',
-    }
-    data = urllib.urlencode(params)
+    self.params.update({'ICStateNum': '1', 'ICAction': 'NYU_CLS_DERIVED_BACK', 'ICSID': self.ICSID})
+    data = urllib.urlencode(self.params)
     r = self.opener.open(self.scrape_url, data)
     page = r.read()
     return BeautifulSoup.BeautifulSoup(page)
@@ -183,45 +184,15 @@ class Scraper:
     
   def _confirm_long_listing(self, ICStateNum):
     # basically, press "yes" to confirm showing more than 100 results
-    params = {
-      'ICAction': "#ICYes",
-      'ICChanged': '-1',
-      'ICElementNum': '0',
-      'ICFocus': '',
-      'ICResubmit': '0',
-      'ICSID': self.ICSID,
-      'ICSaveWarningFilter': '0',
-      'ICStateNum': ICStateNum,
-      'ICType': 'Panel',
-      'ICXPos': '0',
-      'ICYPos': '0',
-      'NYU_CLS_DERIVED_DESCR100': '',
-      'NYU_CLS_DERIVED_DESCR100_JOB_POST1': '',
-      'NYU_CLS_WRK_NYU_FALL': 'Y',
-      'NYU_CLS_WRK_NYU_FALL$chk': 'Y',
-    }
-    data = urllib.urlencode(params)
+    self.params.update({'ICStateNum': ICStateNum, 'ICAction': '#ICYes', 'ICSID': self.ICSID})
+    data = urllib.urlencode(self.params)
     r = self.opener.open(self.scrape_url, data)
     page = r.read()
     return BeautifulSoup.BeautifulSoup(page)
   
   def get_section_listing(self, id, current_only='Y'):
-    params = {
-      'ICAction': id,
-      'ICChanged': '-1',
-      'ICElementNum': '0',
-      'ICFocus': '',
-      'ICResubmit': '0',
-      'ICSID': self.ICSID,
-      'ICSaveWarningFilter': '0',
-      'ICStateNum': '1',
-      'ICType': 'Panel',
-      'ICXPos': '0',
-      'ICYPos': '0',
-      'NYU_CLS_WRK_NYU_FALL': current_only,
-      'NYU_CLS_WRK_NYU_FALL$chk': current_only,
-    }
-    data = urllib.urlencode(params)
+    self.params.update({'ICStateNum': '1', 'ICAction': id, 'ICSID': self.ICSID})
+    data = urllib.urlencode(self.params)
     r = self.opener.open(self.scrape_url, data)
     page = r.read()
     soup = BeautifulSoup.BeautifulSoup(page)
@@ -316,23 +287,8 @@ class Scraper:
       
   
   def get_detail_for_course_in_section(self, id, ind, ICStateNum):
-    params = {
-      'ICAction': 'NYU_CLS_DERIVED_TERM$' + ind,
-      'ICChanged': '-1',
-      'ICElementNum': '0',
-      'ICFocus': '',
-      'ICResubmit': '0',
-      'ICSID': self.ICSID,
-      'ICSaveWarningFilter': '0',
-      'ICStateNum': "%s" % ICStateNum,
-      'ICType': 'Panel',
-      'ICXPos': '0',
-      'ICYPos': '1332',
-      'NYU_CLS_DERIVED_DESCR100': '',
-      'NYU_CLS_DERIVED_DESCR100_JOB_POST1': '',
-      'NYU_CLS_WRK_NYU_FALL$chk': 'N',
-    }
-    data = urllib.urlencode(params)
+    self.params.update({'ICStateNum': ICStateNum, 'ICAction': 'NYU_CLS_DERIVED_TERM$' + ind, 'ICSID': self.ICSID})
+    data = urllib.urlencode(self.params)
     r = self.opener.open(self.scrape_url, data)
     page = r.read()
     soup = BeautifulSoup.BeautifulSoup(page)
