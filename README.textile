@@ -1,16 +1,19 @@
 h1. OpenCourseSearch.org
 
-Latest version of Open Course Search, a scraper and website that provides an alternative frontend to university registrar listings.
+OpenCourseSearch.org is a project to free the data trapped inside aging university course databases. It was born out of frustration with how difficult searching for courses can be on these systems.
 
-More info: http://nyu.opencoursesearch.org/about/
+More info: http://opencoursesearch.org/about/
 
 Schools:
-  - NYU
+  - New York University
+  - Ohio State University
+  - University of California, Los Angeles
+  - University of Nebraska-Lincoln
+  - University of Nebraska at Omaha
+  - University of Nebraska Kearney
 
 Requirements:
   - Django
-  - BeautifulSoup
-  - pickle
-  - cookielib
+  - Redis
 
 Contact: @moriogawa
