@@ -52,7 +52,6 @@ def stats_search(request):
     if data.get('session', ''):
       s = Session.objects.get(slug=data['session'])
       qs = qs.filter(course__session = s)
-      crumbs.append("%s" % s)
     if data.get('college', ''):
       c = get_object_or_404(College, id=data['college'])
       qs = qs.filter(course__college = c)

@@ -17,11 +17,12 @@
 
 <script type="text/javascript">
   $(document).ready(function() {
+    search.set_vars('{{ NETWORK.slug }}', '{{ session.slug }}');
+    update_stats.set_vars('{{ NETWORK.slug }}', '{{ session.slug }}');
     search.loading("start");
     search.populate_facets(function() {
       search.prepare_facets();
       search.prepare_stats();
-      //update_stats.call()
       search.deactivate();
       search.loading("stop");
     });

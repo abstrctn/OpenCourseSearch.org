@@ -7,16 +7,16 @@
   </div>
   <div class="key clearfix"><div class="box"></div> = {{ availability.box_value }} session{{ availability.box_value|pluralize }}</div>
   <div class="info">
-    {% if total_results == total_sections %}
-      <h2>Out of {{ total_results|intcomma }} sections in {{ NETWORK.abbr }}'s Fall 2011 registration...</h2>
-    {% else %}
+    {% if crumbs %}
       <h2>Out of {{ total_results|intcomma }} sections in: <span class="crumbs">{{ crumbs }}</span>...</h2>
+    {% else %}
+      <h2>Out of {{ total_results|intcomma }} sections...</h2>
     {% endif %}
     <p><span class="open">{{ availability.open.count|intcomma }}</span> session{% if availability.open.count == 1 %} is{% else %}s are{% endif %} still open.</p>
     <p><span class="wait">{{ availability.wait.count|intcomma }}</span> session{% if availability.wait.count == 1 %} is{% else %}s are{% endif %} waitlisted.</p>
     <p><span class="closed">{{ availability.closed.count|intcomma }}</span> session{% if availability.closed.count == 1 %} is{% else %}s are{% endif %} closed.</p>
     <p><span class="unknown">{{ availability.unknown.count|intcomma }}</span> session{% if availability.unknown.count == 1 %} is{% else %}s are{% endif %} unknown.</p>
-  {% if total_results != total_sections %}
+  {% if crumbs %}
     <p class="pressenter">Press enter to see them</p>
   {% endif %}
   </div>

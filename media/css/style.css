@@ -87,7 +87,7 @@ body {
   background: #d6dde9;
 }
 #results .result .top .names {float: left;}
-#results .result .top .names .course_name a {font-weight: bold; font-size: 14px; color: #243759; text-decoration: none;}
+#results .result .top .names .course_name, #results .result .top .names .course_name a {font-weight: bold; font-size: 14px; color: #243759; text-decoration: none;}
 #results .result .top .names .course_name a:hover {text-decoration: underline;}
 #results .result .top .names .college_name {color: #555;}
 #results .result .top .names .classification_name {color: #555;}
@@ -146,7 +146,7 @@ body {
 #results .result .extra .sections .section span {float: left; margin-right: 15px;}
 #results .result .extra .sections .section span.number {width: 40px;}
 #results .result .extra .sections .section span.status {width: 70px;}
-#results .result .extra .sections .section span.meets {width: 330px; min-width: 220px;}
+#results .result .extra .sections .section span.meets {width: 330px; min-width: 220px; min-height: 10px;}
 #results .result .extra .sections .section span.meets .meet {}
 #results .result .extra .sections .section span.meets .meet .day {width: 60px;}
 #results .result .extra .sections .section span.meets .meet .time {width: 130px;}
@@ -604,7 +604,15 @@ h2 .crumbs {
 .pressenter {
   margin-top: 8px;
   font-size: 13px;
-  color: #555;
+  color: #222;
+  background: #f0efbd;
+  border-radius: 4px;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  font-size: 12px;
+  padding: 3px;
+  clear: both;
+  width: 128px !important;
 }
 
 /* course detail */
