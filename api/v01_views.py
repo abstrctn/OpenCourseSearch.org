@@ -50,7 +50,7 @@ def course(request):
     'offset': offset,
     'results_per_page': LIMIT,
     'total': qs.count(),
-    'more': (offset * (LIMIT + 1)) < qs.count(),
+    'more': ((offset + 1) * LIMIT) < qs.count(),
     'results': [
       {
         'name': result.name,
@@ -67,7 +67,7 @@ def course(request):
         'level': result.level.name if result.level else None,
         'grading': result.grading,
         'description': result.description,
-        'url': "http://%s.opencoursesearch.org%s" % (data.get('network'), result.get_absolute_url()),
+        #'url': "http://%s.opencoursesearch.org%s" % (data.get('network'), result.get_absolute_url()),
         'sections': [
           {
             'id': section.id,
