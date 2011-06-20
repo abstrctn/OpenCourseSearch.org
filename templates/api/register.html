@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}OpenCourseSearch.org | API | register{% endblock %}
+
+{% block content %}
+  <div class="bodycontent">
+    <div class="docs">
+      <h1>Register an API key</h1>
+
+      <h4>Register</h4>
+      <form action="/api/register/submit" method="post">
+      {% csrf_token %}
+        {% if msg %}<p class="{{ status }}">{{ msg }}</p>{% endif %}
+        <label for="email">your email</label>
+        <input type="text" name="email" id="email" />
+        <input type="submit" class="submit" value="Register" />
+      </form>
+      
+      <h4>Why do I need an API key?</h4>
+      <p>It's just a formality. We don't have strict rate limiting at the moment, but use API keys to track your usage. If it starts to be a strain on our servers, this way we can contact you and work out a better solution.</p>
+      
+      <h4>Just a reminder</h4>
+      <p>The API is available for only non-commercial (though not necessarily only personal) uses. If you have a question as to whether or not your application meets this criteria, <a href="/about/">contact us.</a></p>
+      
+    </div>
+  </div>
+
+
+{% endblock %}

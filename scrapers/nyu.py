@@ -1,86 +1,20 @@
 import cookielib, urllib2, urllib, BeautifulSoup, re, time, pickle
-from courses.helpers import *
+from scrapers.peoplesoft import PeopleSoftScraper
+from courses.models import *
 
-"""
-This class scrapes NYU's course registration listings on Albert,
-and writes the pickled data out to a specified file directory.
-
-Shouldn't require a working NYU Net ID to work, but adding it is worth a shot
-if something seems broken.
-
-Can whip up a command-line version if anyone wants it.
-
->>> from scraper import Scraper
->>> s = Scraper('/opt/storage/')
->>> s.run()
-
->>> s = Scraper('/opt/storage/', '$username', '$password')
->>> s.run()
-
-# (optional) scrape only a slice of the subjects
->>> s = Scraper('/opt/storage/', '$username', '$password', 0, 10)
->>> s.run()
-
-Data is pickled per-course category as follows:
-
-classes = {
-  '$course_id': {
-    'class_name': 'Animal Minds',
-    'classification': 'ANST-UA',
-    'college': 'College of Arts and Science',
-    'component': 'Lecture',
-    'course_name': 'Topics is AS',
-    'description': 'This course analyzes the ways that...',
-    'grading': 'CAS Graded',
-    'is_open': 'Open',
-    'level': 'Undergraduate',
-    'loc_code': 'WS',
-    'meet_data': '09/06/2011 - 12/23/2011 Mon,Wed 11.00 AM - 12.15 PM with Sebo, Jeffrey',
-    'notes': 'Open only to ANST minors during the first...',
-    'number': '600',
-    'section': '001',
-    'session': '09/06/2011 - 12/16/2011',
-  },
-  ...
-}
-
-"""
-class Scraper:
-  def __init__(self, storage_dir, username=None, password=None, start=0, end=None):
-    self.ICSID = ''
-    self.sections = None
-    self.section_data = {}
-    self.classes = {}
-    self.hold = None
-    self.DUMP_DIR = storage_dir
-    self.username = username
-    self.password = password
+class NYUScraper(PeopleSoftScraper):
+  def __init__(self, *args, **kwargs):
+    super(NYUScraper, self).__init__(*args, **kwargs)
     
-    self.start_index = start
-    if end:
-      self.end_index = start + end
-    else:
-      self.end_index = None
-    
+    self.season = self.session.sessioninfo_set.get(info_type='season').info_value
+    self.params.update({
+      'NYU_CLS_DERIVED_DESCR100': '',
+      'NYU_CLS_DERIVED_DESCR100_JOB_POST1': '',
+      'NYU_CLS_WRK_NYU_%s' % self.season: 'Y',
+      'NYU_CLS_WRK_NYU_%s$chk' % self.season: 'Y',
+    })
     self.login_url = 'https://admin.portal.nyu.edu/psp/paprod/EMPLOYEE/EMPL/?cmd=login'
     self.scrape_url = 'https://sis.nyu.edu/psc/csprod/EMPLOYEE/CSSS/c/NYU_SR.NYU_CLS_SRCH.GBL'
-    
-    self.last_section = ''
-    self.longs = []
-    
-    self.cj = cookielib.CookieJar()
-    self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
-  
-  def _make_connection(self):
-    try:
-      if self.username and self.password:
-        self.log_in()
-      print "touching home..."
-      self.access_home()
-    except:
-      print "Server is not responding. Try quitting and running again..."
-    print "retrieving course sections..."
-    self.get_all_sections()
   
   def run(self, forever=False):
     self._make_connection()
@@ -95,6 +29,18 @@ class Scraper:
       if not forever:
         return
   
+  def _make_connection(self):
+    self.access_home()
+    self.set_term()
+    print "retrieving course sections..."
+    self.get_all_sections()
+  
+  def set_term(self):
+    params = {
+      'ICAction': 'NYU_CLS_DERIVED_NYU_CLS_YR_%s' % self.term,
+    }
+    self._click(self.scrape_url)
+  
   def log_in(self):
     params = {
       'timezoneOffset': '240',
@@ -103,43 +49,35 @@ class Scraper:
       'pwd': self.password,
       'Submit': 'Sign In'
     }
-    data = urllib.urlencode(params)
-    # open the log in page
-    r = self.opener.open(self.login_url)
-    # log in
-    r = self.opener.open(self.login_url, data)
-    page = r.read()
+    self._click(self.login_url)
+    self._click(self.login_url, data)
     print "logged in."
   
   def access_home(self):
-    r = self.opener.open(self.scrape_url)
-    page = r.read()
-    soup = BeautifulSoup.BeautifulSoup(page)
+    self._click(self.scrape_url)
+    soup = self._soup
     self.ICSID = soup.find('input', {'type': 'hidden', 'name': 'ICSID'})['value']
     print "Browsing key found: %s" % self.ICSID
   
   def get_home(self):
-    params = {
-      'ICAction': 'NYU_CLS_DERIVED_BACK',
-      'ICChanged': '-1',
-      'ICElementNum': '0',
-      'ICFocus': '',
-      'ICResubmit': '0',
-      'ICSID': self.ICSID,
-      'ICSaveWarningFilter': '0',
+    self.params.update({
       'ICStateNum': '1',
-      'ICType': 'Panel',
-      'ICXPos': '0',
-      'ICYPos': '0',
-      'NYU_CLS_DERIVED_DESCR100': '',
-      'NYU_CLS_DERIVED_DESCR100_JOB_POST1': '',
-      'NYU_CLS_WRK_NYU_FALL': 'Y',
-      'NYU_CLS_WRK_NYU_FALL$chk': 'Y',
-    }
-    data = urllib.urlencode(params)
-    r = self.opener.open(self.scrape_url, data)
-    page = r.read()
-    return BeautifulSoup.BeautifulSoup(page)
+      'ICAction': 'NYU_CLS_DERIVED_BACK',
+      'ICSID': self.ICSID,
+      'NYU_CLS_WRK_NYU_%s' % self.season: 'Y',
+      'NYU_CLS_WRK_NYU_%s$chk' % self.season: 'Y',
+    })
+    self._click(self.scrape_url, self.params)
+    
+    self.params.update({
+      'ICAction': 'NYU_CLS_WRK_NYU_%s' % self.season,
+      'ICSID': self.ICSID,
+      'NYU_CLS_WRK_NYU_%s' % self.season: 'Y',
+      'NYU_CLS_WRK_NYU_%s$chk' % self.season: 'Y',
+    })
+    self._click(self.scrape_url, self.params)
+
+    return self._soup
   
   def get_all_sections(self):
     """
@@ -160,9 +98,11 @@ class Scraper:
     print "%s sections loaded" % (len(self.sections))
     
     # get colleges, classifications
-    data = []
+    #data = []
+    data = {}
     ret = []
     colleges = soup.findAll('td', {'class': 'SSSGROUPBOXLEFTLABEL'})
+    colleges.reverse()
     for c in colleges:
       college = c.contents[1]
       college = college.replace('&nbsp;', '')
@@ -174,60 +114,28 @@ class Scraper:
         name = name.replace('&amp;', '&')
         try:
           course_name, course_code = re.search('(.*)\s\((.+)\)', name).groups()
-          data.append([college, course_name, course_code])
+          #data.append([college, course_name, course_code])
+          data[course_code] = {'college': college, 'name': course_name}
         except:
           print name
-    f = open('%scollege-classifications.txt' % (self.DUMP_DIR), 'w')
-    pickle.dump(data, f)
-    f.close()
+    self.classifications = data
+    #f = open('%scollege-classifications.txt' % (self.storage_dir), 'w')
+    #pickle.dump(data, f)
+    #f.close()
     
   def _confirm_long_listing(self, ICStateNum):
     # basically, press "yes" to confirm showing more than 100 results
-    params = {
-      'ICAction': "#ICYes",
-      'ICChanged': '-1',
-      'ICElementNum': '0',
-      'ICFocus': '',
-      'ICResubmit': '0',
-      'ICSID': self.ICSID,
-      'ICSaveWarningFilter': '0',
-      'ICStateNum': ICStateNum,
-      'ICType': 'Panel',
-      'ICXPos': '0',
-      'ICYPos': '0',
-      'NYU_CLS_DERIVED_DESCR100': '',
-      'NYU_CLS_DERIVED_DESCR100_JOB_POST1': '',
-      'NYU_CLS_WRK_NYU_FALL': 'Y',
-      'NYU_CLS_WRK_NYU_FALL$chk': 'Y',
-    }
-    data = urllib.urlencode(params)
-    r = self.opener.open(self.scrape_url, data)
-    page = r.read()
-    return BeautifulSoup.BeautifulSoup(page)
+    self.params.update({'ICStateNum': ICStateNum, 'ICAction': '#ICYes', 'ICSID': self.ICSID})
+    self._click(self.scrape_url, self.params)
+    return self._soup
   
   def get_section_listing(self, id, current_only='Y'):
-    params = {
-      'ICAction': id,
-      'ICChanged': '-1',
-      'ICElementNum': '0',
-      'ICFocus': '',
-      'ICResubmit': '0',
-      'ICSID': self.ICSID,
-      'ICSaveWarningFilter': '0',
-      'ICStateNum': '1',
-      'ICType': 'Panel',
-      'ICXPos': '0',
-      'ICYPos': '0',
-      'NYU_CLS_WRK_NYU_FALL': current_only,
-      'NYU_CLS_WRK_NYU_FALL$chk': current_only,
-    }
-    data = urllib.urlencode(params)
-    r = self.opener.open(self.scrape_url, data)
-    page = r.read()
-    soup = BeautifulSoup.BeautifulSoup(page)
+    self.params.update({'ICStateNum': '1', 'ICAction': id, 'ICSID': self.ICSID})
+    self._click(self.scrape_url, self.params)
+    soup = self._soup
     ICStateNum = 1 # default
     
-    if page.find("This search will return more than 100 results and may take a while to process.") > 0:
+    if self._page.find("This search will return more than 100 results and may take a while to process.") > 0:
       print "confirming long listing..."
       #time.sleep(4)
       self.longs.append(id)
@@ -273,7 +181,7 @@ class Scraper:
       try:
         level = meta[2].split(':')[1].strip()
       except: pass
-      
+      self.save = soup
       try:
         index = c.findNext('td', {'class': 'SSSGROUPBOXRIGHTLABEL'}).findNext('a')['name'].split('$')[1]
       except:
@@ -291,10 +199,7 @@ class Scraper:
           'index': index}
   
   def process_section(self, id):
-    try:
-      id = self.sections[id][0]
-    except:
-      return
+    id = self.sections[id][0]
     hold = len(self.classes.keys())
     ICStateNum = self.get_section_listing(id) + 1
     keys = {}
@@ -307,49 +212,26 @@ class Scraper:
       if ind:
         print "  grabbing course %s of %s..." % (i + 1, total)
         self.get_detail_for_course_in_section(id, ind, ICStateNum)
-        time.sleep(8)
     print "%s classes processed" % (len(self.classes.keys()) - hold)
     print "%s total classes scraped" % len(self.classes.keys())
-    f = open('%s%s.txt' % (self.DUMP_DIR, id), 'w')
-    pickle.dump(self.classes, f)
-    f.close()
-    self.classes = {}
-    
-    # django helper method, loads to db
-    load_listing(id)
+    #f = open('%s%s.txt' % (self.storage_dir, id), 'w')
+    #pickle.dump(self.classes, f)
+    #f.close()
+    #self.classes = {}
       
   
   def get_detail_for_course_in_section(self, id, ind, ICStateNum):
-    params = {
-      'ICAction': 'NYU_CLS_DERIVED_TERM$' + ind,
-      'ICChanged': '-1',
-      'ICElementNum': '0',
-      'ICFocus': '',
-      'ICResubmit': '0',
-      'ICSID': self.ICSID,
-      'ICSaveWarningFilter': '0',
-      'ICStateNum': "%s" % ICStateNum,
-      'ICType': 'Panel',
-      'ICXPos': '0',
-      'ICYPos': '1332',
-      'NYU_CLS_DERIVED_DESCR100': '',
-      'NYU_CLS_DERIVED_DESCR100_JOB_POST1': '',
-      'NYU_CLS_WRK_NYU_FALL$chk': 'N',
-    }
-    data = urllib.urlencode(params)
-    r = self.opener.open(self.scrape_url, data)
-    page = r.read()
-    soup = BeautifulSoup.BeautifulSoup(page)
-    
-    try:
-      self.summarize_detail(id, soup)
-    except:
-      print "fail"
+    self.params.update({'ICStateNum': ICStateNum, 'ICAction': 'NYU_CLS_DERIVED_TERM$' + ind, 'ICSID': self.ICSID})
+    self._click(self.scrape_url, self.params)
+    #try:
+    self.summarize_detail(id, self._soup)
+    #except Exception, e:
+    #  self._log_error(e)
   
   def summarize_detail(self, id, soup):
     tables = soup.find('table', {'class': 'PSLEVEL3SCROLLAREABODY'}).findAll('table', {'class': 'PSGROUPBOX', 'width': '531'})
+    notes = ''
     for table in tables:
-      notes = ''
       datacell = table.find('td', {'style': 'background-color: white; font-family: arial; font-size: 12px;'})
       self.datacell = datacell
       
@@ -365,7 +247,7 @@ class Scraper:
         classification = " ".join(bits[:-1])
         class_name = ''
       try:
-        units = re.search('([\w]+( - )?[\w]+ units)', "%s" % datacell).groups()[0]
+        units = re.search('([-\w]+ units)', "%s" % datacell).groups()[0]
       except:
         try:
           # leftover units from previous session of same class, use
@@ -374,34 +256,72 @@ class Scraper:
           else:
             units = ""
         except:
-          units = self.section_data[id]["%s-%s" % (classification, number)]['units'],
+          units = self.section_data[id]["%s-%s" % (classification, number)]['units']
       
       for i in datacell.findAll('span'):
         if i.contents:
-          if i.contents[0].__unicode__() == "Class#:":
+          if i.renderContents() == "Class#:":
             classnum = i.nextSibling.strip(' |')
-          if i.contents[0].__unicode__() == "Session:":
+          if i.renderContents() == "Session:":
             session = i.nextSibling.strip(' |')
-          if i.contents[0].__unicode__() == "Section:":
+          if i.renderContents() == "Section:":
             section = i.nextSibling.strip(' |\r\n')
-          if i.contents[0].__unicode__() == "Class Status:":
-            is_open = i.nextSibling.nextSibling.contents[0]
-          elif i.contents[0].__unicode__() == "Grading:":
+          if i.renderContents() == "Class Status:":
+            status = i.nextSibling.nextSibling.renderContents()
+          elif i.renderContents() == "Grading:":
             grading = i.nextSibling.strip()
-          elif i.contents[0].__unicode__() == "<b>Course Location Code: </b>":
+          elif i.renderContents() == "<b>Course Location Code: </b>":
             loccode = i.nextSibling.strip(' |')
             component = i.nextSibling.nextSibling.nextSibling.strip()
-          elif i.contents[0].__unicode__() == "<b>Notes: </b>":
+          elif i.renderContents() == "<b>Notes: </b>":
             notes = i.nextSibling.strip()
+      
       try:
         meet_data = re.search('(\d{2}/\d{2}/\d{4}[^<]*(at[^<]*)?(with[^<]*)?)\r', "%s" % datacell).groups()[0].strip(' \r\n')
       except:
         self.save = datacell
-    
+      
+      try:
+        days = re.search('(([A-Z][a-z][a-z],?){1,3})', meet_data).groups()[0].split(',')
+      except: days = []
+      try:
+        start, end = re.search('(\d{1,2}\.\d{2} \w{2})[^\d]*(\d{1,2}\.\d{2} \w{2})', meet_data).groups()
+        if len(start) == 7:
+          start = "0%s" % start
+        if len(end) == 7:
+          end = "0%s" % end
+        if start[-2:] == "PM" and start[:2] != '12':
+          start = datetime.time(int(start[:2]) + 12, int(start[3:5]))
+        else:
+          start = datetime.time(int(start[:2]), int(start[3:5]))
+        if end[-2:] == "PM" and end[:2] != '12':
+          end = datetime.time(int(end[:2]) + 12, int(end[3:5]))
+        else:
+          end = datetime.time(int(end[:2]), int(end[3:5]))
+      except:
+        pass
+      
+      try:
+        prof_list = re.search('with (.*)', meet_data).groups()[0]
+        try:
+          profs = [[name.strip() for name in reversed(prof.split(','))] for prof in prof_list.split(';')]
+          prof = ", ".join([" ".join(prof) for prof in profs])
+        except:
+          prof = prof_list
+      except:
+        prof = ''
+      
+      
+      try:
+        location, room = re.search('at (\w+) (\w+) with', "%s" % datacell).groups()
+      except:
+        location, room = '', ''
+      
+      """
       self.classes[classnum] = {
         'classification': "%s" % classification,
         'number': "%s" % number,
-        'is_open': "%s" % is_open,
+        'status': "%s" % status,
         'session': "%s" % session,
         'section': "%s" % section,
         'grading': "%s" % grading,
@@ -416,5 +336,63 @@ class Scraper:
         'class_name': "%s" % class_name,
         'units': "%s" % units,
       }
+      """
+      
+      section_data = {}
+      section_data['reference_code'] = classnum
+      section_data['classification'] = classification.replace(' ', '')
+      section_data['college'] = "%s" % self.section_data[id]["%s-%s" % (classification, number)]['college']
+      section_data['institution'] = self.institution.slug
+      section_data['number'] = number
+      section_data['section'] = section
+      section_data['course_name'] = "%s" % self.section_data[id]["%s-%s" % (classification, number)]['name']
+      section_data['session'] = self.session.id
+      section_data['section_name'] = class_name
+      
+      section_data['status'] = status
+      section_data['component'] = component
+      section_data['grading'] = grading
+      section_data['units'] = units.replace('units', '')
+      
+      section_data['description'] = "%s" % self.section_data[id]["%s-%s" % (classification, number)]['description']
+      section_data['notes'] = notes
+      section_data['prof'] = prof
+      
+      section_data['meetings'] = []
+      for day in days:
+        meeting = {'day': day, 'location': location, 'room': room}
+        try:
+          start, end = re.search('(\d{1,2}\.\d{2} \w{2})[^\d]*(\d{1,2}\.\d{2} \w{2})', meet_data).groups()
+          start = time.strftime('%H:%M', time.strptime(start, '%I.%M %p'))
+          end = time.strftime('%H:%M', time.strptime(end, '%I.%M %p'))
+          meeting.update({'start': start, 'end': end})
+        except: pass # start, end not known
+        section_data['meetings'].append(meeting)
+      """
+      try:
+        start, end = re.search('(\d{1,2}\.\d{2} \w{2})[^\d]*(\d{1,2}\.\d{2} \w{2})', meet_data).groups()
+        start = time.strftime('%H:%M', time.strptime(start, '%I.%M %p'))
+        end = time.strftime('%H:%M', time.strptime(end, '%I.%M %p'))
+        section_data['meetings'] = [{'day': day, 'start': start, 'end': end} for day in days]
+      except: pass
+      """
+      """
+      section_data['days'] = days
+      try:
+        start, end = re.search('(\d{1,2}\.\d{2} \w{2})[^\d]*(\d{1,2}\.\d{2} \w{2})', meet_data).groups()
+        section_data['start_time'] = time.strftime('%H:%M', time.strptime(start, '%I.%M %p'))
+        section_data['end_time'] = time.strftime('%H:%M', time.strptime(end, '%I.%M %p'))
+      except: pass
+      """
+      
+      #section_data['location'] = location
+      #section_data['room'] = room
+      
+      section_data['classification_name'] = self.classifications[classification]['name']
+      #section_data['mode'] = 
+      section_data['level'] = "%s" % self.section_data[id]["%s-%s" % (classification, number)]['level']
+      
+      self.create_section(section_data)
+
     
     return True

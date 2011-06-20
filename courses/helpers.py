@@ -58,6 +58,7 @@ def load_listing(key):
       
       # get or create the course
       qs = Course.objects.filter(
+      
           classification = CLASSIFICATION,
           number = number)
       if qs.count() > 0:
@@ -109,8 +110,8 @@ def load_listing(key):
         if c['is_open'] and c['is_open'] != SECTION.is_open:
           SECTION.is_open = c['is_open']
           updated = True
-        if prof and prof != SECTION.prof:
-          SECTION.prof = prof
+        if c['prof'] and c['prof'] != SECTION.prof:
+          SECTION.prof = c['prof']
           updated = True
         if c['units'] and c['units'] != SECTION.units:
           SECTION.units = c['units']
@@ -134,7 +135,7 @@ def load_listing(key):
           class_name = c['class_name'],
           notes = c['notes'],
           section = c['section'],
-          prof = prof,
+          prof = c['prof'],
           number = id,
           units = c['units'],
         )

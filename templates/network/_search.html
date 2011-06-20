@@ -1,0 +1,42 @@
+  <div class="searchfilters">
+    <input id="textsearch" class="text-searcher" type="text" value="Search (subject, professor, keyword...)" onfocus="if(this.value == search.search_text) {this.value = '';}" onblur="if (this.value == '') {this.value = search.search_text;}"></input>
+    <span class="query-remove">x</span>
+    {% comment %}
+    <ul class="filters clearfix">
+      {% if levels and levels|length > 1 %}
+      <li class="fil-level">
+        <span class="remove">x</span>
+        <span class="name">Level</span>
+        <select id="level" class="drop-searcher">
+          <option value="-">All</option>
+          {% for l in levels %}
+          <option value="{{ l.id }}">{{ l.name }}</option>
+          {% endfor %}
+        </select>
+      </li>
+      {% endif %}
+      {% if colleges and colleges|length > 1 %}
+      <li class="fil-college">
+        <span class="remove">x</span>
+        <span class="name">College</span>
+        <select id="college" class="drop-searcher">
+          <option value="-">All</option>
+          {% for c in colleges %}
+          <option value="{{ c.id }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+      </li>
+      {% endif %}
+      <li class="fil-subject">
+        <span class="remove">x</span>
+        <span class="name">Subject</span>
+        <select id="subject" class="drop-searcher">
+          <option value="-">All</option>
+          {% for s in subjects %}
+          <option value="{{ s.id }}"{% if s.college %} college="{{ s.college.id }}"{% endif %}>{{ s.name }} ({{ s.code }})</option>
+          {% endfor %}
+        </select>
+      </li>
+    </ul>
+    {% endcomment %}
+  </div>

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Statistics{% endblock %}
+{% block title %}{% endblock %}
 
 {% block extrahead %}
 
@@ -20,6 +20,7 @@
             <option value="G">Graduate</option>
           </select>
         </li>
+        {% if colleges %}
         <li class="fil-college">
           <span class="remove">x</span>
           <span class="name">College</span>
@@ -30,6 +31,7 @@
             {% endfor %}
           </select>
         </li>
+        {% endif %}
         <li class="fil-subject">
           <span class="remove">x</span>
           <span class="name">Subject</span>
@@ -58,7 +60,7 @@
       <div class="options subjects clearfix">
         {% for subject in subjects %}
           <div class="option" college="{{ subject.college.id }}" subject_id="{{ subject.id }}">
-            <p>{{ subject.name|safe }}</p>{% if subject.get_level %}<p class="sub-level">({{ subject.get_level }})</p>{% endif %}
+            <p>{{ subject.name|safe }}</p>{# if subject.get_level %}<p class="sub-level">({{ subject.get_level }})</p>{% endif #}
           </div>
         {% endfor %}
       </div>

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}OpenCourseSearch.org | Course listings for your school.{% endblock %}
+
+{% block extrahead %}
+
+{% endblock extrahead %}
+
+{% block scripts %}{% endblock %}
+
+{% block content %}
+  <div id="content" class="index clearfix">
+    <div class="bang">
+      <div class="larger">Search for classes</div>
+      <div class="smaller">(without the headache)</div>
+    </div>
+    
+    <div class="list clearfix">
+      <div class="item one">
+        <div class="title">
+          <span class="number">1</span>
+          <span class="text">Pick your school.</span>
+        </div>
+        <ul>
+          {% for network in networks %}
+          <li><a href="http://{{ network.slug }}.opencoursesearch.org/">{{ network.name }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="item two">
+          <div class="title">
+            <span class="number">2</span>
+            <span class="text">Search.</span>
+          </div>
+          <p>
+            Search by keyword, department, professor...
+          </p>
+          <img src="{{ MEDIA_URL }}img/search_example.png" alt="search by keyword" />
+      </div>
+      <div class="item three">
+          <div class="title">
+            <span class="number">3</span>
+            <span class="text">Build.</span>
+          </div>
+          <p><a href="https://github.com/abstrctn/OpenCourseSearch.org">This entire site is open source.</a></p>
+          <p>All of the course data is available for free <a href="/api/">via an API.</a></p>
+          <p>Soon: contribute a scraper for your own school.</p>
+      </div>
+
+    </div>
+  </div>
+
+
+{% endblock %}

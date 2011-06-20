@@ -4,3 +4,9 @@ local_settings.py
 uwsgi/
 storage/
 logs/
+maintenance/
+networds/settings_files/
+scrapers/old/
+sources.txt
+zap
+

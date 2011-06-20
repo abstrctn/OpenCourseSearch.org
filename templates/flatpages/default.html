@@ -2,6 +2,10 @@
 
 {% block title %}{{ flatpage.title }}{% endblock %}
 
+{% block extrahead %}
+  <link rel="canonical" href="http://opencoursesearch.org{{ flatpage.url }}"/>
+{% endblock %}
+
 {% block content %}
   <div class="bodycontent">
     <h1>{{ flatpage.title }}</h1>

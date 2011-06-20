@@ -16,9 +16,31 @@ body {
   float: left;
   width: 439px;
   height: 44px;
-  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/nyu.png') no-repeat;
   font-size: 22px;
   color: #333;
+}
+.header .logo-home {
+  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/home.png') no-repeat;
+  width: 342px;
+}
+.header .logo-nyu {
+  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/nyu.png') no-repeat;
+}
+.header .logo-unl {
+  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/unl.png') no-repeat;
+}
+.header .logo-uno {
+  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/uno.png') no-repeat;
+}
+.header .logo-unk {
+  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/unk.png') no-repeat;
+}
+.header .logo-osu {
+  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/osu.png') no-repeat;
+}
+.header .logo-ucla {
+  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/ucla.png') no-repeat;
+  width: 464px;
 }
 .header .total-count {
   float: right;
@@ -38,122 +60,107 @@ body {
   background: #eee;
 }
 
+/* RESULTS */
 #results {
   width: 960px;
-  margin: 10px auto 50px auto;
-}
-#results ul {
-  list-style: none;
-  display: block;
-  padding-top: 7px;
-}
-#results ul li {
-  padding: 6px;
-}
-#results ul li:hover {
-  cursor: pointer;
-}
-#results ul li.row1:hover {
-  background: #e5e5e5;
-}
-#results ul li.row2:hover {
-  background: #f4f4f4;
+  font-family: Georgia, serif;
+  font-size: 12px;
+  margin-top: 10px;
+  /*padding: 15px 0 30px 0;*/
 }
 #results .result {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  margin: 0 0 -1px 0;
+}
+#results .result .top {
+  position: relative;
+  z-index: 10;
+  background: #e7edf6;
   border: 1px solid #ccc;
-  margin: 8px 0;
-  padding: 8px;
+  padding: 5px;
+  height: 44px;
+}
+#results .result .top:hover {
+  cursor: pointer;
+  background: #d6dde9;
+}
+#results .result .top .names {float: left;}
+#results .result .top .names .course_name a {font-weight: bold; font-size: 14px; color: #243759; text-decoration: none;}
+#results .result .top .names .course_name a:hover {text-decoration: underline;}
+#results .result .top .names .college_name {color: #555;}
+#results .result .top .names .classification_name {color: #555;}
+#results .result .top .meta {float: right; color: #555; text-align: right;}
+#results .result .top .meta .classification_code {}
+#results .result .top .meta .level_name {}
+#results .result .top .meta .grading {}
+#results .result.expanded .top-arrow {display: none;}
+#results .result .top-arrow {
+  position: absolute;
+  z-index: 5;
+  top: 28px;
+  font-size: 0;
+  height: 0;
+  line-height: 0;
+  border-style: solid;
+  border-color: transparent;
+  border-right-color: #c7d2e2;
+  border-width: 15px 15px 0px 15px;
+  margin: 0 468px;
+  transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+#results .result .extra.inactive {display: none;}
+#results .result .extra .description {padding: 3px 6px; font-size: 13px; line-height: 18px;}
+#results .result .extra .sections {
+  /*margin: 5px 0 5px 40px;*/
+  margin: 0px 0 5px 0px;
+}
+#results .result .extra .sections a {
+  color: #111;
+  text-decoration: none;
+  clear: both;
+}
+#results .result .extra .sections .section {
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  padding: 4px;
+  margin: 0 0 3px 0;
   font-size: 13px;
+  clear: both;
 }
-#results .result div.classification {
-  width: 175px;
-  margin-right: 10px;
-  float: left;
-}
-#results .result div.classification p.classif-name {
-  font-weight: bold;
+#results .result .extra .sections .section.column_heads {
+  background: none;
+  border: none;
+  padding: 4px 4px 16px 4px;
   font-size: 12px;
+  color: #aaa;
 }
-#results .result div.classification p.classif-code {
-  color: #555;
-  font-size: 12px;
-}
-#results .result .top-top {
-  background: #e1ecef;
-  padding: 8px;
-  margin: -8px -8px 0px -8px;
-}
+#results .result .extra .sections .section.column_heads:hover {background: none;}
+#results .result .extra .sections .section.odd {background: #fff;}
+#results .result .extra .sections .section:hover {background: #eaeaea;}
+#results .result .extra .sections .section.status-waitlist {color: #777;}
+#results .result .extra .sections .section.status-closed {color: #d07d81;}
+#results .result .extra .sections .section span {float: left; margin-right: 15px;}
+#results .result .extra .sections .section span.number {width: 40px;}
+#results .result .extra .sections .section span.status {width: 70px;}
+#results .result .extra .sections .section span.meets {width: 330px; min-width: 220px;}
+#results .result .extra .sections .section span.meets .meet {}
+#results .result .extra .sections .section span.meets .meet .day {width: 60px;}
+#results .result .extra .sections .section span.meets .meet .time {width: 130px;}
+#results .result .extra .sections .section span.meets .meet .location {width: 80px;}
+/*#results .result .extra .sections .section span.days {width: 120px;}
+#results .result .extra .sections .section span.times {width: 130px;}*/
+#results .result .extra .sections .section span.prof {width: 150px;}
+#results .result .extra .sections .section span.units {width: 60px;}
+#results .result .extra .sections .section span.name {width: 100px;}
+#results .result .extra .sections .section span.percentage {width: 150px;}
+#results .result .extra .sections .notes {color: #666; clear: both; padding: 4px;}
 
-#results .result span.name {
-  width: 580px;
-  font-weight: bold;
-  float: left;
-  font-size: 14px;
-}
-#results .result p.description {
-  padding: 8px 0;
-}
-#results .result .section {
-  width: 60px;
-  float: left;
-}
-#results .result .level-college {
-  float: left;
-  width: 175px;
-}
-#results .result .level {
-  font-size: 12px;
-  text-align: left;
-}
-#results .result .college {
-  font-size: 12px;
-  text-align: left;
-}
-#results .result .open {
-  width: 60px;
-  float: left;
-}
-#results .result .days {
-  width: 60px;
-  float: left;
-}
-#results .result .times {
-  width: 80px;
-  float: left;
-}
-#results .result .notes {
-  width: 480px;
-  margin-right: 20px;
-  float: left;
-}
-#results .result .prof {
-  width: 100px;
-  float: left;
-  margin-right: 5px;
-}
-#results .result .units {
-  width: 60px;
-  float: left;
-}
-#results .result .class_name {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 3px;
-}
-#results .row1 {background: #eee;}
-#results ul li.coursestatus-open {}
-#results ul li.coursestatus-wait-list {
-  color: #888;
-}
-#results ul li.coursestatus-closed {
-  color: #888;
-}
-#results ul li.coursestatus-open .open {
-  color: #207829;
-}
-#results ul li.coursestatus-closed .open {
-  color: #782025;
-}
+
+
 
 .stats {
   width: 960px;
@@ -211,6 +218,19 @@ ul.filters li span.remove {
   color: #666;
   text-align: right;
   padding: 0;
+  margin: 18px -15px 0 0;
+}
+.query-remove {
+  float: right;
+  color: #666;
+  text-align: right;
+  padding: 0;
+  margin: -24px -10px 0 0;
+}
+.query-remove:hover {
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
 }
 
 .searchfilters {
@@ -244,8 +264,9 @@ ul.filters li span.remove {
 ul.nav {
   list-style: none;
   float: left;
-  margin-top: 17px;
+  margin-top: 0px;
   margin-left: 10px;
+  width: 300px;
 }
 ul.nav li {
   float: left;
@@ -261,13 +282,15 @@ ul.nav li a:hover {
 }
 
 .bodycontent {
-  margin: 55px auto 0 auto;
+  margin: 25px auto 0 auto;
+  padding-top: 20px;
   width: 680px;
   padding-right: 280px;
   font-family: Georgia, sans-serif;
   font-size: 15px;
   line-height: 19px;
   margin-bottom: 30px;
+  border-top: 1px dashed #888;
 }
 .bodycontent p {
   margin-bottom: 8px;
@@ -283,12 +306,63 @@ ul.nav li a:hover {
   color: #333;
 }
 .social {
-  margin-top: 4px;
+  margin: 4px -10px 0 0;
   float: right;
   text-align: right;
 }
 
+.search-counts {
+  float: right; font-size: 13px; margin-top: 4px; position: relative;
+}
+.search-counts span {
+  float: left;
+  margin: 3px 0 0 0;
+}
+.search-counts .session-switcher-current {
+  list-style: none;
+  margin-left: 5px;
+  float: left;
+  background-image: url('../img/arrow.png');
+  background-repeat: no-repeat;
+  background-position: right 8px;
+  padding: 3px 14px 3px 3px;
+  background-color: #eee;
+}
+.session-switcher-current:hover {
+  cursor: pointer;
+  background-color: #ddd;
+}
+.session-switcher-current.clicked {
+  background-color: #ddd;
+}
+ul.session-switcher {
+  position: absolute;
+  top: 22px;
+  right: 0;
+  display: none;
+  list-style: none;
+  background: #e0e0e0;
+}
+ul.session-switcher.active {
+  display: block;
+}
+ul.session-switcher li {
+  text-align: right;
+  padding: 5px 14px 5px 5px;
+  color: #333;
+}
+ul.session-switcher li.option:hover {
+  background: #ccc;
+  color: #000;
+  cursor: pointer;
+}
+ul.session-switcher li a {
+  text-decoration: none;
+  color: #333;
+}
+
 #inbox {
+  display: none;
   position: fixed;
   bottom: 0;
   width: 100%;
@@ -465,10 +539,14 @@ ul.nav li a:hover {
   color: #aaa;
 }
 
-.stats .options {
+.stats-selectors {
+  clear: both;
+  padding-top: 15px;
+}
+.stats-selectors .options {
   margin-bottom: 30px;
 }
-.stats .options .option {
+.stats-selectors .options .option {
   width: 118px;
   height: 60px;
   padding: 8px 6px;
@@ -479,51 +557,356 @@ ul.nav li a:hover {
   -webkit-border-radius: 6px;
   background: #eee;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   margin: 0 5px 5px 0;
 }
-.stats .subjects.options .option {
+.stats-selectors .subjects.options .option {
   font-size: 12px;
   width: 101px;
-  height: 70px;
+  height: 50px;
   margin: 0 5px 5px 0;
   padding: 8px 6px;
 }
-.stats .options .option:hover {
+.stats-selectors .options .option:hover {
   background: #ccc;
   cursor: pointer;
 }
-.stats .options .option.active {
+.stats-selectors .options .option.active {
   background:#afdef3;
 }
-.stats .options .sub-level {
+.stats-selectors .options .sub-level {
   margin-top: 5px;
   color: #555;
   font-size: 11px;
 }
 
-.stats .results {
+.stats {
+  border-top: 1px dashed #aaa;
+  padding-top: 10px;
   min-height: 230px;
 }
-.stats .results.loading {
+.results.loading .stats {
   opacity: .5;
   -moz-opacity: .5;
   -webkit-opacity: .5;
 }
-.stats .results h1 {
-  border-top: 1px dashed #aaa;
-  padding-top: 10px;
-  margin: 10px 0 6px 0;
+.results .stats h2 {
+  margin: 0px 0 6px 0;
+  font-size: 18px !important;
 }
 
 .filters.hide {
   display: none;
 }
-h1 .crumbs {
-  font-size: 14px;
+h2 .crumbs {
+  font-size: 14px !important;
 }
 .pressenter {
   margin-top: 8px;
   font-size: 13px;
   color: #555;
 }
+
+/* course detail */
+#content {
+  width: 960px;
+  margin: 0 auto;
+  padding: 10px 0 30px 0;
+}
+.course_detail {
+  font-family: Georgia;
+}
+.course_detail .top {
+  background: #e7edf6;
+  border: 1px solid #ccc;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+.course_detail .top .names {float: left;}
+.course_detail .top .names .course_name {color: #243759; font-weight: bold; font-size: 17px;}
+.course_detail .top .names .college_name {color: #555;margin-top: 3px;}
+.course_detail .top .names .classification_name {color: #555;}
+.course_detail .top .meta {float: right; color: #555; text-align: right;}
+.course_detail .top .meta .classification_code {}
+.course_detail .top .meta .level_name {}
+.course_detail .top .meta .grading {}
+
+.course_detail .sections {
+  /*margin: 5px 0 5px 40px;*/
+  margin: 5px 0 5px 0px;
+}
+.course_detail .sections a {
+  color: #111;
+  text-decoration: none;
+}
+.course_detail .sections .section {
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  padding: 4px;
+  margin: 0 0 3px 0;
+  font-size: 13px;
+}
+.course_detail .sections .section.odd {background: #fff;}
+/*.course_detail .sections .section:hover {background: #eaeaea;}*/
+.course_detail .sections .section.status-waitlist {color: #777;}
+.course_detail .sections .section.status-closed {color: #d07d81;}
+.course_detail .sections .section span {float: left; margin-right: 15px;}
+.course_detail .sections .section span.number {width: 60px;}
+.course_detail .sections .section span.status {width: 70px;}
+.course_detail .sections .section span.days {width: 120px;}
+.course_detail .sections .section span.times {width: 130px;}
+.course_detail .sections .section span.prof {width: 150px;}
+.course_detail .sections .section span.units {width: 100px;}
+.course_detail .sections .section span.percentage {width: 150px;}
+.course_detail .comments {
+  margin-top: 15px;
+}
+
+
+/* end course detail */
+
+/* index */
+
+.index {
+  clear: both;
+  margin: 25px auto auto !important;
+  padding-top: 20px;
+  padding-bottom: 50px;
+  border-top: 1px dashed #777;
+}
+.index .bang {
+  margin: 40px auto 60px auto;
+  text-align: center;
+  font-family: Helvetica, Arial, sans-serif;
+}
+.index .bang .larger {
+  font-size: 24px;
+  font-weight: bold;
+}
+.index .bang .smaller {
+  margin-top: 7px;
+  font-size: 16px;
+}
+.index .list {}
+.index .list .item {float: left;}
+.index .list p {
+  margin: 15px 0 15px 0;
+  font-size: 14px;
+}
+.index .list p a {
+  color: #23355c;
+}
+.index .list .title {
+  margin-bottom: 40px;
+}
+.index .list .title .number {
+  border: 1px solid #275c75;
+  background: #3282a7;
+  color: #fff;
+  font-size: 17px;
+  padding: 2px 4px;
+  margin-right: 6px;
+}
+.index .list .title .text {
+  font-size: 20px;
+  font-weight: normal;
+}
+.index .list .one {
+  width: 260px;
+  padding-right: 20px;
+  margin-right: 20px;
+  border-right: 1px solid #ccc;
+}
+.index .list .two {
+  width: 360px;
+  padding-right: 20px;
+  margin-right: 20px;
+  border-right: 1px solid #ccc;
+}
+.index .list .three {
+  width: 250px;
+}
+.index .list .one ul {
+  clear: both;
+  list-style: none;
+}
+.index .list .one ul li {
+  margin: 10px 0;
+  font-size: 16px;
+}
+.index .list .one ul li a {
+  color: #111;
+  text-decoration: none;
+}
+.index .list .one ul li a:hover {
+  text-decoration: underline;
+}
+
+
+
+
+
+
+/* end index */
+
+
+
+/* documentation */
+
+.docs {
+}
+.docs a {
+  color: #23355c;
+}
+.docs h3 {
+  font-size: 18px;
+  font-weight: bold;
+  font-family: Helvetica, Arial, sans-serif;
+  margin: 20px 0 10px;
+}
+.docs h4 {
+  font-size: 14px;
+  padding: 2px 4px;
+  background: #dae5fe;
+  font-family: Helvetica, Arial, sans-serif;
+  margin: 20px 0 5px 0;
+}
+
+
+.docs p.url {
+  padding: 4px;
+  background: #eee;
+  border: 1px solid #bbb;
+  font-family: Courier;
+  color: #555;
+  font-size: 12px;
+}
+.docs table {
+  font-family: Helvetica, sans-serif;
+}
+.docs table th {
+  font-weight: normal;
+  text-align: left;
+  padding: 5px;
+  background: #ccc;
+}
+.docs table td {
+  font-size: 13px;
+  line-height: 19px;
+  padding: 5px 5px 5px 10px;
+  vertical-align: top;
+}
+.docs table td.level, .docs td.field, .docs td.type {
+  font-family: Courier;
+  color: #555;
+  font-size: 12px;
+  padding: 5px 8px 5px 5px;
+  background: #eee;
+  vertical-align: top;
+}
+.docs table td.level {
+  width: 110px;
+}
+.docs table td.field {
+  font-weight: bold;
+  color: #222;
+}
+.docs table td.type {
+  background: #f8f8f8;
+}
+
+.docs ul {
+  margin-left: 20px;
+}
+.docs ul li {
+}
+
+.docs .uplevel {
+  color: #aaa;
+  display: block;
+}
+
+.docs .code {
+  font-family: Courier;
+  font-size: 90%;
+}
+.docs pre {
+  font-size: 13px;
+  width: 680px;
+  word-wrap: break-word;
+  background: #eee;
+  padding: 4px;
+  border: 1px solid #ccc;
+}
+
+.docs form {
+  margin: 25px 0;
+}
+.docs form input#email {
+  width: 400px;
+  height: 20px;
+  padding: 3px;
+  font-size: 14px;
+}
+.docs form input.submit {
+  clear: both;
+  display: block;
+  margin: 20px 0 0 84px;
+}
+.docs form label {
+  font-family: Helvetica, Arial, sans-serif;
+  margin-right: 15px;
+}
+.docs form p {
+  padding: 4px;
+}
+.docs form p.error {
+  background: #f59898;
+}
+.docs form p.success {
+  background: #98f59c;
+}
+
+/* end documentation */
+
+
+.page-loading {
+  background: #f0efbd;
+  border-radius: 4px;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  font-size: 12px;
+  padding: 3px;
+  display: none;
+}
+.page-loading.active {display: inline;}
+.tagline {
+  font-size: 13px; margin-top: 6px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

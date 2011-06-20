@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ NETWORK.slug.upper }}.OpenCourseSearch.org | Course listings{% endblock %}
+
+{% block extrahead %}
+
+{% endblock extrahead %}
+
+{% block content %}
+  <div id="content">
+    {% include 'network/_search.html' %}
+    <div id="results" class="results"></div>
+    <div class="stats-selectors" style="display: none;"></div>
+  <div id="inbox">
+  </div>
+  </div>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    search.loading("start");
+    search.populate_facets(function() {
+      search.prepare_facets();
+      search.prepare_stats();
+      //update_stats.call()
+      search.deactivate();
+      search.loading("stop");
+    });
+  });
+</script>
+
+{% endblock %}

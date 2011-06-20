@@ -1,65 +1,64 @@
+{% load humanize %}
 <!DOCTYPE html>
 <html>
 <head>
   <script type="text/javascript">var _sf_startpt=(new Date()).getTime()</script>
-  <title>OpenCourseSearch.org NYU {% block title %}{% endblock %} | Course listings</title>
-
-  <meta name="title" content="nyu.OpenCourseSearch.org" />
   <meta name="description" content="The more sensible search option for university course listings" />
-  <meta name="keywords" content="opencoursesearch, open course search, opencoursesearch.org, nyu.opencoursesearch.org, Albert, nyu, registrar, listing" />
+  <meta name="keywords" content="opencoursesearch, open course search, opencoursesearch.org, {{ NETWORK.slug }}.opencoursesearch.org, {{ NETWORK.slug }}, registrar, listing" />
   <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
   <meta name="medium" content="news" />
-  <link rel="image_src" href="http://opencoursesearch.org.s3.amazonaws.com/logos/nyu.png" />
+  <link rel="shortcut icon" href="{{ MEDIA_URL }}img/favicon.ico" />
+
+  <title>{% block title %}OpenCourseSearch.org{% endblock %}</title>
+
+  {% if NETWORK.slug and NETWORK.slug != 'home' %}
+    <link rel="image_src" href="http://opencoursesearch.org.s3.amazonaws.com/logos/{{ NETWORK.slug }}.png" />
+    <meta name="title" content="{{ NETWORK.slug|upper }}.OpenCourseSearch.org" />
+  {% else %}
+    <link rel="image_src" href="http://opencoursesearch.org.s3.amazonaws.com/img/mainlogo.png" />
+    <meta name="title" content="OpenCourseSearch.org" />
+  {% endif %}
 
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js" type="text/javascript"></script>
-  <!--<script src="http://opencoursesearch.org.s3.amazonaws.com/js/scripts.js" type="text/javascript"></script>-->
+  <script src="{{ MEDIA_URL }}js/underscore-min.js" type="text/javascript"></script>
+  {#<script src="http://opencoursesearch.org.s3.amazonaws.com/js/scripts.js" type="text/javascript"></script>#}
   
-  <link rel="stylesheet" type="text/css" href="http://opencoursesearch.org.s3.amazonaws.com/css/style.css">
+  <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/style.css">
 
+  {% block extrahead %}{% endblock %}
+
+{% block scripts %}
 <script type="text/javascript">
-if (location.href.indexOf('http://www.opencoursesearch.org') == 0)
-  window.location = 'http://nyu.opencoursesearch.org';
-if (location.href.indexOf('http://opencoursesearch.org') == 0)
-  window.location = 'http://nyu.opencoursesearch.org';
-
-$(document).ready(function() {
-  update.subjects_hold = $('#subject option');
-  $('.text-searcher').change(function() {
-    update.call(1);
+$(document).ready(function() {  
+  /* results */
+  $('.result .top').live('click', function() {
+    $(this).next().next().toggleClass('inactive');
+    $(this).parent().toggleClass('expanded');
   });
-  $('.drop-searcher').change(function() {
-    if (!update.active)
-      update.activate();
-    update.call(1);
-  });
-  $('#college').change(function() {
-    id = $('#college option:selected')[0].value;
-    $('#subject option').remove();
-    $('#subject').append(update.subjects_hold);
-    $('#subject > option[college!=' + id + ']').remove();
-    $('#subject').prepend(update.subjects_hold[0]);
-    $('#subject').val('-');
-    update.call(1);
+  $('.result .top').live({
+    mouseenter: function() {
+      $(this).css('z-index', 20);
+      $(this).parent().css('z-index', 20);
+      $(this).next().css('z-index', 15);
+      $(this).next().animate({'top': '+=15'}, 250, function() {});
+    },
+    mouseleave: function() {
+      $(this).next().animate({'top': '-=15'}, 100, function() {
+        $(this).prev().css('z-index', 10);
+        $(this).prev().parent().css('z-index', 10);
+        $(this).css('z-index', 5);
+      });
+    }
   });
   $('.next-page').live('click', function() {
-    page = $(this).attr('value');
-    update.call(page);
+    offset = $(this).attr('value');
+    search.call(offset);
     return false;
   });
-  $('ul.filters span').hover(
-    function() {
-      $(this).parent().addClass('remove-hover');
-    },
-    function() {
-      $(this).parent().removeClass('remove-hover');
-    }
-  );
-  $('ul.filters span').click(function() {
-    $(this).parent().find('select').val('-');
-    update.call(1);
-  });
+  /* end results */
+  
   if ($('#textsearch').length == 1)
-    interval = setInterval('checkTextSearch();', 500)
+    interval = setInterval('search.checkTextSearch();', 500)
   
   inbox.load();
   $("#results ul li").live('click', function() {
@@ -89,42 +88,35 @@ $(document).ready(function() {
     $("#subject").val('-');
     $("#textsearch").val(id);
   });
+  
+  /* session switcher */
+  $('.session-switcher-current').live('click', function() {
+    $(this).toggleClass('clicked');
+    $(this).next().toggleClass('active');
+  });
+  /* end session switcher */
 
   // show data viz by default
-  update_stats.call();
-  $('.colleges .option').live('click', function() {
-    act = $(this).hasClass('active');
-    $('.colleges .option').removeClass('active');
-    $('.subjects .option').removeClass('active');
-    if (!act) {
-      $(this).addClass('active');
-      id = $(this).attr('college_id');
-      $('.subjects .option[college=' + id + ']').show();
-      $('.subjects .option[college!=' + id + ']').hide();
-    } else {
-      // unselecting a college - show everything
-      $('.subjects .option').show();
-    }
-    update_stats.call();
-  });
-  $('.subjects .option').live('click', function() {
-    act = $(this).hasClass('active');
-    $('.subjects .option').removeClass('active');
-    if (!act)
-      $(this).addClass('active');
-    update_stats.call();
-  });
-  $('.boxes .box').live('click', function() {
-  });
-
+  //update_stats.call();
+  
+  //search.activate();
+  //search.call(1);
 });
 
-update = {
-  url: '/do_search/',
+search = {
+  school: '{{ NETWORK.institution.slug }}',
+  network: '{{ NETWORK.slug }}',
+  session: '{{ session.slug }}',
+  url: '/api/course',
+  session_data_url: '/api/session',
   search_text: 'Search (subject, professor, keyword...)',
   active: false,
-  activate: function() {
-    update.active = true;
+  subjects_hold: null,
+  text_hold: '',
+  last_search: null,
+  
+  activate: function(callback) {
+    search.active = true;
     
     // transfer data viz selections to search selections
     if ($('.stats-selectors .colleges .option.active').length > 0) {
@@ -136,57 +128,332 @@ update = {
       $('#subject').val(id);
     }
     
+    console.log("status fade out");
     $('.stats-selectors, #results').fadeOut('slow', function() {
       $(this).hide();
       $('#results').html('');
-      $('#results').fadeIn('slow', function() {
-        
+      if(callback)
+        callback();
+      $('#results').fadeIn('fast', function() {
         //$('#results').fadeIn('slow');
       });
     }).slideUp('slow');
   },
+  loading: function(type) {
+    if (type == "start") {
+      $('.page-loading').addClass('active');
+    }
+    if (type == "stop") {
+      $('.page-loading').removeClass('active');
+    }
+  },
   deactivate: function() {
-    update.active = false;
+    search.active = false;
+    console.log("Results fade out");
     $('#results').fadeOut('slow', function() {
       $(this).hide();
       $('#results').html('').show();
+      
       // deactive stats selectors / clean slate
       $('.stats-selectors .option').removeClass('active').show();
       $('.stats-selectors').fadeIn('slow', function() {
-        
         update_stats.call();
-        //$('#results').fadeIn('slow');
       });
     }).slideUp('slow');
   },
-  call: function(page) {
-    if (!update.active)
+  checkTextSearch: function() {
+    val = $('#textsearch')[0].value;
+    if (val != search.text_hold && val != search.search_text) {
+      if (!search.active)
+        search.activate();
+      search.text_hold = val;
+      search.call(0);
+    };
+  },
+  call: function(offset) {
+    if (!search.active)
       return;
     text = $('#textsearch')[0].value;
-    if (text == update.search_text)
+    if (text == search.search_text)
       text = '';
+    college = ''
+    if ($('#college option:selected')[0] != undefined)
+      college = $('#college option:selected')[0].value.replace('-', '');
+    level = '';
+    if ($('#level option:selected')[0] != undefined)
+      level = $('#level option:selected')[0].value.replace('-', '');
+    subject = '';
+    if ($('#subject option:selected')[0] != undefined)
+      subject = $('#subject option:selected')[0].value.replace('-', '');
     data = {
-      'level': $('#level option:selected')[0].value.replace('-', ''),
-      'college': $('#college option:selected')[0].value.replace('-', ''),
-      'subject': $('#subject option:selected')[0].value.replace('-', ''),
-      'text': text,
-      'page': page,
+      'level': level,
+      'college': college,
+      'subject': subject,
+      'query': text,
+      'offset': offset,
+      'network': search.network,
+      'session': search.session,
     };
     if (text == '' && data['level'] == '' && data['college'] == '' && data['subject'] == '') {
       // return to data viz
-      update.deactivate();
+      search.deactivate();
       return;
     }
-    $.get(update.url, data, function(result) {
-      if (page == 1)
-        $("#results").html(result);
+    search.loading("start");
+    if (search.last_search)
+      search.last_search.abort();
+    search.last_search = $.getJSON(search.url, data, function(response) {
+      var output = _.template(search.results_template, {response : response} );
+      if (response.offset == 0) {
+        $("#results").html(output);
+      }
       else {
         $(".next-page").remove();
-        $("#results").append(result);
+        $("#results").append(output);
       }
+      search.loading("stop");
     });
   },
-  subjects_hold: null,
+  populate_facets: function(callback) {
+    data = {
+      'network': search.network,
+      'session': search.session,
+    };
+    $.getJSON(search.session_data_url, data, function(response) {
+      var output = _.template(search.facets_template, {
+        levels : response.levels,
+        colleges : response.colleges,
+        subjects : response.subjects,
+      });
+      $(".searchfilters").append(output);
+      var output = _.template(search.stats_selectors_template, {
+        colleges : response.colleges,
+        subjects : response.subjects,
+      });
+      $(".stats-selectors").html(output);
+      if (callback)
+        callback();
+    });
+  },
+  prepare_facets: function() {
+    search.subjects_hold = $('#subject option');
+    $('.text-searcher').change(function() {
+      search.call(0);
+    });
+    $('.drop-searcher').change(function() {
+      if (!search.active)
+        search.activate(function() {search.call(0)});
+      else
+        search.call(0);
+    });
+    $('#college').change(function() {
+      id = $('#college option:selected')[0].value;
+      $('#subject option').remove();
+      $('#subject').append(search.subjects_hold);
+      $('#subject > option[college!=' + id + ']').remove();
+      $('#subject').prepend(search.subjects_hold[0]);
+      $('#subject').val('-');
+      search.call(0);
+    });
+    $('ul.filters span').hover(
+      function() {
+        $(this).parent().addClass('remove-hover');
+      },
+      function() {
+        $(this).parent().removeClass('remove-hover');
+      }
+    );
+    $('ul.filters span').click(function() {
+      $(this).parent().find('select').val('-');
+      search.call(0);
+    });
+    $('.query-remove').live('click', function() {
+      $('#textsearch')[0].value = search.search_text;
+      search.call(0);
+      //if (val != search.text_hold && val != search.search_text) {
+      //  $('#textsearch')[0].value = search.search_text;
+      //  search.checkTextSearch();
+      //}
+    });
+  },
+  prepare_stats: function() {
+    $('.stats-selectors .colleges .option').live('click', function() {
+      act = $(this).hasClass('active');
+      $('.stats-selectors .colleges .option').removeClass('active');
+      $('.stats-selectors .subjects .option').removeClass('active');
+      if (!act) {
+        $(this).addClass('active');
+        id = $(this).attr('college_id');
+        $('.stats-selectors .subjects .option[college_id=' + id + ']').show();
+        $('.stats-selectors .subjects .option[college_id!=' + id + ']').hide();
+      } else {
+        // unselecting a college - show everything
+        $('.stats-selectors .subjects .option').show();
+      }
+      update_stats.call();
+    });
+    $('.stats-selectors .subjects .option').live('click', function() {
+      act = $(this).hasClass('active');
+      $('.stats-selectors .subjects .option').removeClass('active');
+      if (!act)
+        $(this).addClass('active');
+      update_stats.call();
+    });
+    $('.stats-selectors .boxes .box').live('click', function() {
+    });
+  },
+  result: null,
+  results_template: '\
+    <div class="results_container">\
+    <% for (var result_index = 0; result_index < response.results.length; result_index++){ %>\
+      <% var r = response.results[result_index]; %>\
+      <div class="result clearfix result-<%= r.id %>">\
+        <div class="top clearfix">\
+          <div class="names">\
+            <p class="course_name"><a href="<%= r.url %>"><%= r.name %></a></p>\
+            <% if (r.classification.college) { %>\
+              <p class="college_name"><%= r.classification.college.name %></p>\
+            <% } %>\
+            <p class="classification_name"><%= r.classification.name %></p>\
+          </div>\
+          <div class="meta">\
+            <p class="classfication_code"><%= r.classification.code %>-<%= r.number %></p>\
+            <p class="level_name"><%= r.level %></p>\
+            <p class="grading"><%= r.grading %></p>\
+          </div>\
+        </div>\
+        <div class="top-arrow"></div>\
+        <div class="extra inactive">\
+          <% if(r.description) { %>\
+            <div class="description">\
+              <%= r.description %>\
+            </div>\
+          <% } %>\
+          <div class="sections">\
+            <div class="section column_heads">\
+              <span class="number">class #</span>\
+              <span class="meets"><span class="meet">\
+                <span class="day">days</span>\
+                <span class="time">times</span>\
+                <span class="location">location</span>\
+              </span></span>\
+              <span class="prof">professor</span>\
+              <span class="units">units/credits</span>\
+              <span class="status">status</span>\
+              <span class="name">name</span>\
+              <span class="percentage"></span>\
+            </div>\
+          <% for (var section_index = 0; section_index < r.sections.length; section_index++){ %>\
+            <% var sec = r.sections[section_index]; %>\
+            <a href="<%= r.url %>">\
+            <div class="section <%= ["even", "odd"][section_index % 2] %> status-<%= sec.status.label.replace(/[^-a-zA-Z0-9,&\s]+/ig, "").replace(/\\s/gi, "-").toLowerCase() %> clearfix">\
+              <span class="number"><%= sec.number %></span>\
+              <span class="meets">\
+              <% for (var meeting_index = 0; meeting_index < sec.meets.length; meeting_index++){ %>\
+                <% var meet = sec.meets[meeting_index]; %>\
+                <div class="meet">\
+                  <span class="day"><%= meet.day %>&nbsp;</span>\
+                  <span class="time"><% if (meet.start && meet.end){ %><%= meet.start %> - <%= meet.end %><% } %>&nbsp;</span>\
+                  <span class="location"><% if (meet.location && meet.room){ %><%= meet.location %> <%= meet.room %><% } %>&nbsp;</span>\
+                </div>\
+              <% } %>\
+              </span>\
+              <span class="prof"><%= sec.prof %>&nbsp;</span>\
+              <span class="units"><%= sec.units %> unit<%= sec.units == "1" ? "" : "s" %>&nbsp;</span>\
+              <span class="status"><%= sec.status.label %></span>\
+              <span class="name"><%= sec.name %></span>\
+              <% if (sec.status.seats) { %>\
+                <span class="percentage"><%= sec.status.seats.taken %>\
+                <% if (sec.status.seats.total) { %> / <%= sec.status.seats.total %><% } %>\
+                 seats taken</span>\
+              <% } %>\
+              <% if (sec.status.label == "Wait List" && sec.status.waitlist) { %>\
+                <span class="percentage"><%= sec.status.waitlist.taken %> on waitlist</span>\
+              <% } %>\
+            </div>\
+            </a>\
+            <% if (sec.notes) { %>\
+            <div class="notes"><%= sec.notes %></div>\
+            <% } %>\
+          <% } %>\
+          </div>\
+        </div>\
+      </div>\
+     <% } %>\
+     \
+    <% if(response.more) { %>\
+    <div class="next-page" href="#" value="<%= response.results_per_page + response.offset %>">\
+      More\
+    </div>\
+    <% } else { %>\
+    <div class="no-next-page">\
+      No more courses\
+    </div>\
+    <% } %>\
+  </div>',
+  facets_template: '\
+    <ul class="filters clearfix">\
+      <% if (levels && levels.length > 1) { %>\
+      <li class="fil-level">\
+        <span class="remove">x</span>\
+        <span class="name">Level</span>\
+        <select id="level" class="drop-searcher">\
+          <option value="-">All</option>\
+          <% for (var index = 0; index < levels.length; index++){ %>\
+          <% var l = levels[index]; %>\
+          <option value="<%= l.id %>"><%= l.name %></option>\
+          <% } %>\
+        </select>\
+      </li>\
+      <% } %>\
+      <% if (colleges && colleges.length > 1) { %>\
+      <li class="fil-college">\
+        <span class="remove">x</span>\
+        <span class="name">College</span>\
+        <select id="college" class="drop-searcher">\
+          <option value="-">All</option>\
+          <% for (var index = 0; index < colleges.length; index++){ %>\
+          <% var c = colleges[index]; %>\
+          <option value="<%= c.id %>"><%= c.name %></option>\
+          <% } %>\
+        </select>\
+      </li>\
+      <% } %>\
+      <% if (subjects && subjects.length > 1) { %>\
+      <li class="fil-subject">\
+        <span class="remove">x</span>\
+        <span class="name">Subject</span>\
+        <select id="subject" class="drop-searcher">\
+          <option value="-">All</option>\
+          <% for (var index = 0; index < subjects.length; index++){ %>\
+          <% var s = subjects[index]; %>\
+          <option value="<%= s.id %>"<% if (s.college){ %> college="<%= s.college %>"<% } %>>\
+            <%= s.name %> (<%= s.code %>)\
+          </option>\
+          <% } %>\
+        </select>\
+      </li>\
+      <% } %>\
+    </ul>\
+  ',
+  stats_selectors_template: '\
+    <div class="options colleges clearfix">\
+      <% for (var index = 0; index < colleges.length; index++){ %>\
+        <% var c = colleges[index]; %>\
+        <div class="option" college_id="<%= c.id %>">\
+          <%= c.name %>\
+        </div>\
+      <% } %>\
+    </div>\
+    <div class="options subjects clearfix">\
+      <% for (var index = 0; index < subjects.length; index++){ %>\
+        <% var s = subjects[index]; %>\
+        <div class="option" <% if (s.college){ %> college_id="<%= s.college %>"<% } %> subject_id="<%= s.id %>">\
+          <p><%= s.name %></p>\
+        </div>\
+      <% } %>\
+    </div>\
+  '
 };
 inbox = {
   load: function() {
@@ -217,6 +484,8 @@ inbox = {
   },
 };
 update_stats = {
+  institution: '{{ NETWORK.slug }}',
+  session: '{{ session.slug }}',
   url: '/stats/search/',
   call: function() {
     $('#results').addClass('loading');
@@ -230,6 +499,8 @@ update_stats = {
       /*'level': $('#level option:selected')[0].value.replace('-', ''),*/
       'college': college,
       'subject': subject,
+      'institution': update_stats.institution,
+      'session': update_stats.session
     };
     $.get(update_stats.url, data, function(result) {
       $("#results").html(result).removeClass('loading');
@@ -239,27 +510,19 @@ update_stats = {
           code = (e.keyCode ? e.keyCode : e.which);
           if (code == 13) {
             $(window).unbind('keydown');
-            if (!update.active)
-              update.activate();
-            update.call();
+            if (!search.active)
+              search.activate(function() {search.call()});
+            else
+              search.call();
           }
         });
       }
     });
   },
 };
-textHold = '';
-function checkTextSearch() {
-  val = $('#textsearch')[0].value;
-  if (val != textHold && val != update.search_text) {
-    if (!update.active)
-      update.activate();
-    textHold = val;
-    update.call(1);
-  };
-};
 
 </script>
+{% endblock %}
   
 <script type="text/javascript">
 
@@ -281,33 +544,46 @@ function checkTextSearch() {
 <body>
   <div class="header clearfix">
     <div class="social" style="margin-left: -40px;">
-      <a style="float: right;" href="http://twitter.com/share" class="twitter-share-button" data-text="I'm picking my courses with OpenCourseSearch at NYU!" data-url="http://nyu.opencoursesearch.org" data-count="horizontal">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
-      <iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fnyu.opencoursesearch.org%2F&amp;send=true&amp;layout=button_count&amp;width=150&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:150px; height:21px; float: right;" allowTransparency="true"></iframe>
+      <a style="float: right;" href="http://twitter.com/share" class="twitter-share-button" data-text="A more sensible search option for university course listings" data-url="http://opencoursesearch.org" data-count="horizontal">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+      <iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fopencoursesearch.org%2F&amp;send=true&amp;layout=button_count&amp;width=150&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:97px; height:21px; float: right;" allowTransparency="true"></iframe>
     </div>
-    {% comment %}
-    {% if total_courses %}
-    <p class="total-count">Searching {{ total_courses }} courses<br />{{ total_sections }} sections</p>
-    {% endif %}
-    {% endcomment %}
-    <a href="/" class="logo"></a>
+    <a href="/" class="logo logo-{{ NETWORK.slug }}"></a>
     <ul class="nav">
-      <li><a href="/">Search</a></li>
+      <li><a href="http://opencoursesearch.org/">Home</a></li>
+      {% if NETWORK.slug != 'home' %}<li><a href="/">Search</a></li>{% endif %}
       <li><a href="/about/">About</a></li>
-      <li><a href="/code/">Code</a></li>
+      <li><a href="https://github.com/abstrctn/OpenCourseSearch.org">Code</a></li>
       <li><a href="/comments/">Comments/Bugs</a></li>
+      <li><a href="/api/">API</a></li>
     </ul>
     
   </div>
-  <div class="tagline clearfix" style="width: 960px; margin: 0 auto;">
-    <span style="float: right; font-size: 13px; margin-top: 4px;">Fall 2011 Course Search: {{ total_courses }} courses, {{ total_sections }} sections</span>
-    <span style="font-size: 13px; margin-top: 4px;">Open Course Search: NYU - A more sensible search solution</span>
+  <div class="clearfix" style="width: 960px; margin: 0 auto;">
+    <div class="search-counts">
+      <span>Searching {{ total_courses|intcomma }} courses, {{ total_sections|intcomma }} sections.</span>
+      {% if NETWORK.slug and NETWORK.slug != 'home' and session %}
+      <div class="session-switcher-current">{{ session.name }}</div>
+      <ul class="session-switcher">
+        {% for s in NETWORK.session_set.all %}
+          {% if s != session %}
+          <li class="option"><a href="{{ s.get_absolute_url }}">{{ s.name }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if NETWORK.session_set.all|length == 1 %}
+          <li>Just the one for now!</li>
+        {% endif %}
+      </ul>
+      {% endif %}
+    </div>
+    <span class="tagline">A more sensible search solution for {% firstof INSTITUTION "your school" %}.</span>
+    <span class="page-loading">Loading...</span>
   </div>
     
   {% block content %}
   {% endblock content %}
   
 <script type="text/javascript">
-var _sf_async_config={uid:6059,domain:"nyu.opencoursesearch.org"};
+var _sf_async_config={uid:6059,domain:"{{ NETWORK.slug }}.opencoursesearch.org"};
 (function(){
   function loadChartbeat() {
     window._sf_endpt=(new Date()).getTime();
