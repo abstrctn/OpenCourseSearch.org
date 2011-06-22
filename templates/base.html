@@ -19,12 +19,19 @@
     <meta name="title" content="OpenCourseSearch.org" />
   {% endif %}
 
+  {% comment %}
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js" type="text/javascript"></script>
   <script src="{{ MEDIA_URL }}js/underscore-min.js" type="text/javascript"></script>
+  <script src="{{ MEDIA_URL }}js/visualsearch.js" type="text/javascript"></script>
+  {% endcomment %}
+  <script src="{{ MEDIA_URL }}js/dependencies.js" type="text/javascript"></script>
+  <script src="{{ MEDIA_URL }}js/visualsearch.js" type="text/javascript"></script>
+  <script src="{{ MEDIA_URL }}js/coursesearch.js" type="text/javascript"></script>
+  
   <script src="{{ MEDIA_URL }}js/scripts.js" type="text/javascript"></script>
-  {#<script src="http://opencoursesearch.org.s3.amazonaws.com/js/scripts.js" type="text/javascript"></script>#}
   
   <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/style.css">
+  <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/visualsearch-datauri.css">
 
   {% block extrahead %}{% endblock %}
   
@@ -68,12 +75,12 @@
       {% if NETWORK.slug and NETWORK.slug != 'home' and session %}
       <div class="session-switcher-current">{{ session.name }}</div>
       <ul class="session-switcher">
-        {% for s in NETWORK.session_set.all %}
+        {% for s in NETWORK.active_sessions %}
           {% if s != session %}
           <li class="option"><a href="{{ s.get_absolute_url }}">{{ s.name }}</a></li>
           {% endif %}
         {% endfor %}
-        {% if NETWORK.session_set.all|length == 1 %}
+        {% if NETWORK.active_sessions|length == 1 %}
           <li>Just the one for now!</li>
         {% endif %}
       </ul>
