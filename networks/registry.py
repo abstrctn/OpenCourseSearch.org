@@ -1,5 +1,5 @@
 from django.conf import settings
-from courses.models import Session, Network
+from networks.models import Network
 
 class NetworkScraper(object):
   def __init__(self, *args, **kwargs):

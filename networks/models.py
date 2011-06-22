@@ -14,6 +14,9 @@ class Network(models.Model):
   
   class Meta:
     ordering = ('name',)
+  
+  def active_sessions(self):
+    return self.session_set.filter(active=True)
 
 class NetworkManager(models.Manager):
   def get_query_set(self):
