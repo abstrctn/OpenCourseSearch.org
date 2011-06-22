@@ -1,8 +1,9 @@
 import pickle, re, os
 from courses.models import *
+from django.conf import settings
 
 def load_listing(key):
-  f = open('/opt/django-projects/rcl/storage/%s.txt' % key)
+  f = open('%s%s.txt' % (settings.MEDIA_ROOT, key))
   data = pickle.load(f)
   SESSION, created = Session.objects.get_or_create(name='Fall 2011',
       start_date=datetime.datetime(2011,9,6),
@@ -57,6 +58,7 @@ def load_listing(key):
       
       # get or create the course
       qs = Course.objects.filter(
+      
           classification = CLASSIFICATION,
           number = number)
       if qs.count() > 0:
@@ -96,7 +98,8 @@ def load_listing(key):
         _created_course += 1
       
       # create the section
-      qs = Section.objects.filter(course = COURSE, section = c['section'])
+      #qs = Section.objects.filter(course = COURSE, section = c['section'])
+      qs = Section.objects.filter(number = id)
       if qs.count() > 0:
         SECTION = qs[0]
         #print "Section found: %s" % SECTION
@@ -104,14 +107,11 @@ def load_listing(key):
         if id != SECTION.number:
           SECTION.number = id
           updated = True
-        if c['is_open'] and c['is_open'] == "Open" and not SECTION.is_open:
+        if c['is_open'] and c['is_open'] != SECTION.is_open:
           SECTION.is_open = c['is_open']
           updated = True
-        if c['is_open'] and c['is_open'] != "Open" and SECTION.is_open:
-          SECTION.is_open = c['is_open']
-          updated = True
-        if prof and prof != SECTION.prof:
-          SECTION.prof = prof
+        if c['prof'] and c['prof'] != SECTION.prof:
+          SECTION.prof = c['prof']
           updated = True
         if c['units'] and c['units'] != SECTION.units:
           SECTION.units = c['units']
@@ -135,7 +135,7 @@ def load_listing(key):
           class_name = c['class_name'],
           notes = c['notes'],
           section = c['section'],
-          prof = prof,
+          prof = c['prof'],
           number = id,
           units = c['units'],
         )
@@ -163,8 +163,8 @@ def load_listing(key):
         SECTION.save()
         #print "Section created: %s" % SECTION
         _created_section += 1
-    except:
-      print "ERROR!"
+    except Exception, e:
+      print "ERROR!: %s" % e
   
   print "Courses:\n  %s Created, %s Updated, %s Skipped" % (
       _created_course, _updated_course, _skipped_course)
@@ -173,7 +173,7 @@ def load_listing(key):
 
 def load_all_listings():
   from courses.helpers import *
-  for f in os.listdir('/opt/django-projects/rcl/storage/'):
+  for f in os.listdir(settings.MEDIA_ROOT):
     try:
       t = re.search('(LINK\d\$\d{1,3}).txt', f).groups()[0]
       load_listing(t)
@@ -188,8 +188,8 @@ def clean(c):
   return c
 
 def load_classifications():
-  #f = open('/opt/django-projects/rcl/storage/classifications.txt')
-  f = open('/opt/django-projects/rcl/storage/college-classifications.txt')
+  #f = open('/opt/django-projects/ocs/storage/classifications.txt')
+  f = open('%scollege-classifications.txt' % (settings.MEDIA_ROOT))
   data = pickle.load(f)
   for i in data:
     print i

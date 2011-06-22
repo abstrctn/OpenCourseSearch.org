@@ -9,7 +9,7 @@
           </div>
           <span class="name">{{ r.course_name }}</span>
           <div class="clearfix level-college">
-            <p class="college">{{ r.college }}</p>
+            {% if r.college %}<p class="college">{{ r.college }}</p>{% endif %}
             <p class="level">{{ r.level }}</p>
           </div>
         </p>
@@ -21,10 +21,10 @@
       {% endif %}
     </div>
     <ul class="clearfix">
-    {% for sec in r.section_set.all %}
-      <li class="clearfix {% cycle 'row1' 'row2' %}" section_id="{{ sec.id }}">
-        <p class="section">{{ sec.get_section }}&nbsp;</p>
-        <p class="open">{{ sec.is_open|yesno:"Open,Closed" }}&nbsp;</p>
+    {% for sec in r.sections.all %}
+      <li class="clearfix {% cycle 'row1' 'row2' %}{% if sec.open %} coursestatus-{{ sec.open|slugify }}{% endif %}" section_id="{{ sec.id }}">
+        <p class="section">{{ sec.get_number }}&nbsp;</p>
+        <p class="status">{{ sec.status }}&nbsp;</p>
         <p class="days">{{ sec.days }}&nbsp;</p>
         <p class="times">{{ sec.times }}&nbsp;</p>
         <p class="notes">
@@ -32,7 +32,9 @@
           {{ sec.notes }}
         &nbsp;</p>
         <p class="prof">{{ sec.prof }}&nbsp;</p>
-        <p class="units">#{{ sec.number }}<br />{{ sec.units }}&nbsp;</p>
+        <p class="units">
+          {% if sec.units %}{{ sec.units }} credit{% if sec.units != '1' %}s{% endif %}{% endif %}
+        &nbsp;</p>
       </li>
     {% endfor %}
     </ul>

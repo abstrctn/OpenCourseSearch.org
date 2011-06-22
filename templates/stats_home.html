@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}{% endblock %}
+
+{% block extrahead %}
+
+{% endblock extrahead %}
+
+{% block content %}
+  <div class="stats">
+    <div class="searchfilters">
+      <input id="textsearch" class="text-searcher" type="text" value="Search (subject, professor, keyword...)" onfocus="if(this.value == update.search_text) {this.value = '';}" onblur="if (this.value == '') {this.value = update.search_text;}"></input>
+      <ul class="filters clearfix">
+        <li class="fil-level">
+          <span class="remove">x</span>
+          <span class="name">Level</span>
+          <select id="level" class="drop-searcher">
+            <option value="-">All</option>
+            <option value="U">Undergraduate</option>
+            <option value="G">Graduate</option>
+          </select>
+        </li>
+        {% if colleges %}
+        <li class="fil-college">
+          <span class="remove">x</span>
+          <span class="name">College</span>
+          <select id="college" class="drop-searcher">
+            <option value="-">All</option>
+            {% for c in colleges %}
+            <option value="{{ c.id }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </li>
+        {% endif %}
+        <li class="fil-subject">
+          <span class="remove">x</span>
+          <span class="name">Subject</span>
+          <select id="subject" class="drop-searcher">
+            <option value="-">All</option>
+            {% for s in subjects %}
+            <option value="{{ s.id }}" college="{{ s.college.id }}">{{ s.name }} ({{ s.code }})</option>
+            {% endfor %}
+          </select>
+        </li>
+      </ul>
+    </div>
+        
+    <div id="results" class="results">
+      
+    </div>
+    
+    <div class="stats-selectors">
+      <div class="options colleges clearfix">
+        {% for college in colleges %}
+          <div class="option" college_id="{{ college.id }}">
+            {{ college.get_short_name }}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="options subjects clearfix">
+        {% for subject in subjects %}
+          <div class="option" college="{{ subject.college.id }}" subject_id="{{ subject.id }}">
+            <p>{{ subject.name|safe }}</p>{# if subject.get_level %}<p class="sub-level">({{ subject.get_level }})</p>{% endif #}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    
+  </div>
+  <div id="inbox">
+  </div>
+{% endblock %}

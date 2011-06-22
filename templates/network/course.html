@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+Senior Seminar / Journalism / College of Arts and Science / New York University
+{% block title %}{{ course.name }} / {{ course.classification.name }}{% if course.college %} / {{ course.college.name }}{% endif %} / {{ NETWORK.name }}{% endblock %}
+
+{% block content %}
+<div id="content">
+  {% include 'network/_search.html' %}
+  
+  <div id="results" class="course_detail">
+    <div class="top clearfix">
+      <div class="names">
+        <p class="course_name">{{ course.name }}</p>
+        {% if course.classification.college %}
+          <p class="college_name">{{ course.classification.college.name }}</p>
+        {% endif %}
+        <p class="classification_name">{{ course.classification.name }}</p>
+      </div>
+      <div class="meta">
+        <p class="classfication_code">{{ course.classification.code }}-{{ course.number }}</p>
+        <p class="level_name">{{ course.level }}</p>
+        <p class="grading">{{ course.grading }}</p>
+      </div>
+    </div>
+    <div class="sections">
+    {% for sec in course.sections.all %}
+      <div class="section {% cycle 'even' 'odd' %} status-{{ sec.status.label|slugify }} clearfix">
+        <span class="number">{{ sec.number }}&nbsp;</span>
+        <span class="meets">
+        </span>
+        <span class="days">{{ sec.days }}&nbsp;</span>
+        <span class="times">{{ sec.times }}&nbsp;</span>
+        <span class="prof">{{ sec.prof }}&nbsp;</span>
+        <span class="units">{{ sec.units }} unit{{ sec.units|pluralize }}&nbsp;</span>
+        <span class="status">{{ sec.status.label }}</span>
+        {% if sec.status.seats %}
+          <span class="percentage">{{ sec.status.seats.taken }}
+          {% if sec.status.seats.total %} / {{ sec.status.seats.total }}{% endif %}
+           seats taken</span>
+        {% endif %}
+        {% if sec.status.label == "Wait List" and sec.status.waitlist %}
+          <span class="percentage">{{ sec.status.waitlist.taken }} on waitlist</span>
+        {% endif %}
+      </div>
+    {% endfor %}
+    </div>
+    <div class="comments">
+      <div id="fb-root"></div><script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script><fb:comments href="http://nyu.opencoursesearch.org/fall-2011/school-of-continuing-and-professional-studies/academic-enrichment/computer-recitation/AENR1-DC-707/" num_posts="5" width="500"></fb:comments>
+    </div>
+
+  </div>
+  
+  <div class="stats-selectors" style="display: none;"></div>
+  
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    search.populate_facets(function() {
+      search.prepare_facets();
+      //search.prepare_stats();
+      //update_stats.call()
+      //search.deactivate();
+    });
+  });
+</script>
+
+{% endblock %}
+
+
+            <div class="section <%= ["even", "odd"][section_index % 2] %> status-<%= sec.status.label.replace(/[^-a-zA-Z0-9,&\s]+/ig, "").replace(/\\s/gi, "-").toLowerCase() %> clearfix">\
+              <span class="number"><%= sec.number %></span>\
+              <span class="meets">\
+              <% for (var meeting_index = 0; meeting_index < sec.meets.length; meeting_index++){ %>\
+                <% var meet = sec.meets[meeting_index]; %>\
+                <div class="meet">\
+                  <span class="day"><%= meet.day %>&nbsp;</span>\
+                  <span class="time"><% if (meet.start && meet.end){ %><%= meet.start %> - <%= meet.end %><% } %>&nbsp;</span>\
+                  <span class="location"><% if (meet.location && meet.room){ %><%= meet.location %> <%= meet.room %><% } %>&nbsp;</span>\
+                </div>\
+              <% } %>\
+              </span>\
+              <span class="prof"><%= sec.prof %>&nbsp;</span>\
+              <span class="units"><%= sec.units %> unit<%= sec.units == "1" ? "" : "s" %>&nbsp;</span>\
+              <span class="status"><%= sec.status.label %></span>\
+              <span class="name"><%= sec.name %></span>\
+              <% if (sec.status.seats) { %>\
+                <span class="percentage"><%= sec.status.seats.taken %>\
+                <% if (sec.status.seats.total) { %> / <%= sec.status.seats.total %><% } %>\
+                 seats taken</span>\
+              <% } %>\
+              <% if (sec.status.label == "Wait List" && sec.status.waitlist) { %>\
+                <span class="percentage"><%= sec.status.waitlist.taken %> on waitlist</span>\
+              <% } %>\
+            </div>\
+            </a>\
+            <% if (sec.notes) { %>\
+            <div class="notes"><%= sec.notes %></div>\

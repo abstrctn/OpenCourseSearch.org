@@ -1,0 +1,12 @@
+{{ object.name }} {{ object.number }}
+{{ object.description }}
+{% for section in object.sections.all %}{{ section.prof }} {% endfor %}
+{{ object.classification.code }} {{ object.classification.name }}
+{{ object.college.name }}
+{{ object.level }}
+{% for section in object.sections.all %}
+{{ section.name }}
+{{ section.number }}
+{{ section.component }}
+{% for meeting in section.grouped_meetings %}{{ meeting.location }} {{ meeting.room }}{% endfor %}
+{% endfor %}

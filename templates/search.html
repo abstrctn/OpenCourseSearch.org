@@ -33,8 +33,7 @@
         </select>
       </li>
     </ul>
-    <input id="textsearch" class="searcher" type="text" value="Search" onfocus="if(this.value == 'Search') {this.value = '';}" onblur="if (this.value == '') {this.value = 'Search';}"></input>
-    <p style="text-align: right; font-size: 13px; margin-top: 4px;">Searching {{ total_courses }} courses, {{ total_sections }} sections</p>
+    <input id="textsearch" class="searcher" type="text" value="Search (subject, professor, keyword...)" onfocus="if(this.value == update.search_text) {this.value = '';}" onblur="if (this.value == '') {this.value = update.search_text;}"></input>
   </div>
   
   <div id="results">
