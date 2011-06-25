@@ -54,8 +54,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.flatpages',
     
-    'haystack',
-    
     'courses',
     'networks',
     'api',
