@@ -1,55 +1,1744 @@
-/*
- VisualSearch.js 0.1.0
- (c) 2011 Samuel Clay, @samuelclay, DocumentCloud Inc.
- VisualSearch.js may be freely distributed under the MIT license.
- For all details and documentation:
- http://documentcloud.github.com/visualsearch
-*/
-(function(){var c=jQuery;if(!window.VS)window.VS={};if(!VS.app)VS.app={};if(!VS.ui)VS.ui={};if(!VS.model)VS.model={};if(!VS.utils)VS.utils={};VS.init=function(a){var b={container:"",query:"",unquotable:[],callbacks:{search:c.noop,focus:c.noop,categoryMatches:c.noop,facetMatches:c.noop}};VS.options=_.extend({},b,a);VS.options.callbacks=_.extend({},b.callbacks,a.callbacks);VS.app.hotkeys.initialize();VS.app.searchQuery=new VS.model.SearchQuery;VS.app.searchBox=new VS.ui.SearchBox(a);if(a.container){b=
-VS.app.searchBox.render().el;c(a.container).html(b)}VS.app.searchBox.value(a.query||"");c(window).bind("unload",function(){});return VS.app.searchBox}})();
-(function(){var c=jQuery;VS.ui.SearchBox=Backbone.View.extend({id:"search",events:{"click .VS-cancel-search-box":"clearSearch","mousedown .VS-search-box":"focusSearch","dblclick .VS-search-box":"highlightSearch"},initialize:function(){this.flags={allSelected:false};this.facetViews=[];this.inputViews=[];_.bindAll(this,"renderFacets","_maybeDisableFacets","disableFacets");VS.app.searchQuery.bind("refresh",this.renderFacets);c(document).bind("keydown",this._maybeDisableFacets)},render:function(){c(this.el).append(JST.search_box({}));
-c(document.body).setMode("no","search");return this},value:function(a){if(a==null)return this.getQuery();return this.setQuery(a)},getQuery:function(){var a=[],b=this.inputViews.length;VS.app.searchQuery.each(_.bind(function(d,e){a.push(this.inputViews[e].value());a.push(d.serialize())},this));b&&a.push(this.inputViews[b-1].value());return _.compact(a).join(" ")},setQuery:function(a){this.currentQuery=a;VS.app.SearchParser.parse(a);this.clearInputs()},viewPosition:function(a){a=_.indexOf(a.type=="facet"?
-this.facetViews:this.inputViews,a);if(a==-1)a=0;return a},searchEvent:function(){var a=this.value();this.focusSearch();VS.options.callbacks.search(a)!==false&&this.value(a)},addFacet:function(a,b,d){a=VS.utils.inflector.trim(a);b=VS.utils.inflector.trim(b||"");if(a){var e=new VS.model.SearchFacet({category:a,value:b||""});VS.app.searchQuery.add(e,{at:d});this.renderFacets();_.detect(this.facetViews,function(f){if(f.model==e)return true}).enableEdit()}},renderFacets:function(){this.facetViews=[];this.inputViews=
-[];this.$(".search_inner").empty();VS.app.searchQuery.each(_.bind(function(a,b){this.renderFacet(a,b)},this));this.renderSearchInput()},renderFacet:function(a,b){var d=new VS.ui.SearchFacet({model:a,order:b});this.renderSearchInput();this.facetViews.push(d);this.$(".search_inner").children().eq(b*2).after(d.render().el);d.calculateSize();_.defer(_.bind(d.calculateSize,d));return d},renderSearchInput:function(){var a=new VS.ui.SearchInput({position:this.inputViews.length});this.$(".search_inner").append(a.render().el);
-this.inputViews.push(a)},clearSearch:function(a){this.value("");this.flags.allSelected=false;this.focusSearch(a)},clearInputs:function(){_.each(this.inputViews,function(a){a.clear()})},selectAllFacets:function(){this.flags.allSelected=true;_.each(this.inputViews,function(a){a.selectText()});_.each(this.facetViews,function(a){a.selectFacet()});c(document).one("click",this.disableFacets)},allSelected:function(a){if(a)this.flags.allSelected=false;return this.flags.allSelected},disableFacets:function(a){_.each(this.facetViews,
-function(b){if(b!=a&&(b.modes.editing=="is"||b.modes.selected=="is")){b.disableEdit();b.deselectFacet()}});this.flags.allSelected=false;this.removeFocus()},resizeFacets:function(a){_.each(this.facetViews,function(b){if(!a||b==a)b.resize()})},_maybeDisableFacets:function(a){if(this.flags.allSelected&&VS.app.hotkeys.key(a)=="backspace"){a.preventDefault();this.clearSearch(a);return false}else if(this.flags.allSelected&&VS.app.hotkeys.printable(a))this.clearSearch(a);else if(this.flags.allSelected){this.flags.allSelected=
-false;this.disableFacets()}},focusNextFacet:function(a,b,d){d=d||{};var e=this.facetViews.length,f=d.viewPosition||this.viewPosition(a);if(d.skipToFacet){if(d.skipToFacet&&a.type=="text"&&e==f&&b>=0)b=f=0}else{if(a.type=="text"&&b>0)b-=1;if(a.type=="facet"&&b<0)b+=1}var g;f=Math.min(e,f+b);if(a.type=="text"&&f>=0&&f<e){g=this.facetViews[f];if(d.selectFacet)g.selectFacet();else{g.enableEdit();g.setCursorAtEnd(b||d.startAtEnd)}}else if(a.type=="facet")if(d.skipToFacet)if(f>=e||f<0){g=_.last(this.inputViews);
-g.focus()}else{g=this.facetViews[f];g.enableEdit();g.setCursorAtEnd(b||d.startAtEnd)}else{g=this.inputViews[f];g.focus();d.selectText&&g.selectText()}d.selectText&&g.selectText();this.resizeFacets()},focusSearch:function(a,b){var d=this.inputViews[this.inputViews.length-1];if(!a||c(a.target).is(".VS-search-box")||c(a.target).is(".search_inner")||a.type=="keydown"){this.disableFacets();b?d.focus(b):d.setCursorAtEnd(-1);if(a&&a.type=="keydown"){d.keydown(a);d.box.trigger("keydown")}_.defer(_.bind(function(){this.$("input:focus").length||
-this.inputViews[this.inputViews.length-1].focus(b)},this))}},highlightSearch:function(a){this.focusSearch(a,true)},addFocus:function(){VS.options.callbacks.focus();this.$(".VS-search-box").addClass("VS-focus")},removeFocus:function(){_.any(this.facetViews.concat(this.inputViews),function(a){return a.isFocused()})||this.$(".VS-search-box").removeClass("VS-focus")},showFacetCategoryMenu:function(a){a.preventDefault();a.stopPropagation();if(this.facetCategoryMenu&&this.facetCategoryMenu.modes.open==
-"is")return this.facetCategoryMenu.close();a=[{title:"Account",onClick:_.bind(this.addFacet,this,"account","")},{title:"Project",onClick:_.bind(this.addFacet,this,"project","")},{title:"Filter",onClick:_.bind(this.addFacet,this,"filter","")},{title:"Access",onClick:_.bind(this.addFacet,this,"access","")}];a=this.facetCategoryMenu||(this.facetCategoryMenu=new dc.ui.Menu({items:a,standalone:true}));this.$(".VS-icon-search").after(a.render().open().content);return false}})})();
-(function(){var c=jQuery;VS.ui.SearchFacet=Backbone.View.extend({type:"facet",className:"search_facet",events:{"click .category":"selectFacet","keydown input":"keydown","mousedown input":"enableEdit","mouseover .VS-icon-cancel":"showDelete","mouseout .VS-icon-cancel":"hideDelete","click .VS-icon-cancel":"remove"},initialize:function(){this.flags={canClose:false};_.bindAll(this,"set","keydown","deselectFacet","deferDisableEdit")},render:function(){c(this.el).html(JST.search_facet({model:this.model}));
-this.setMode("not","editing");this.setMode("not","selected");this.box=this.$("input");this.box.val(this.model.get("value"));this.box.bind("blur",this.deferDisableEdit);this.setupAutocomplete();return this},calculateSize:function(){this.box.autoGrowInput();this.box.unbind("updated.autogrow");this.box.bind("updated.autogrow",_.bind(this.moveAutocomplete,this))},resize:function(a){this.box.trigger("resize.autogrow",a)},setupAutocomplete:function(){this.box.autocomplete({source:_.bind(this.autocompleteValues,
-this),minLength:0,delay:0,autoFocus:true,select:_.bind(function(a,b){a.preventDefault();var d=this.model.get("value");this.set(b.item.value);if(d!=b.item.value||this.box.val()!=b.item.value)this.search(a);return false},this)});this.box.autocomplete("widget").addClass("VS-interface")},moveAutocomplete:function(){var a=this.box.data("autocomplete");a&&a.menu.element.position({my:"left top",at:"left bottom",of:this.box.data("autocomplete").element,collision:"flip",offset:"0 0"})},searchAutocomplete:function(){var a=
-this.box.data("autocomplete");a&&a.search()},closeAutocomplete:function(){var a=this.box.data("autocomplete");a&&a.close()},autocompleteValues:function(a,b){var d=this.model.get("category"),e=this.model.get("value"),f=a.term;d=VS.options.callbacks.facetMatches(d)||[];if(f&&e!=f){f=VS.utils.inflector.escapeRegExp(f||"");var g=RegExp("\\b"+f,"i");d=c.grep(d,function(h){return g.test(h)||g.test(h.value)||g.test(h.label)})}b(_.sortBy(d,function(h){return h==e||h.value==e?"":h}))},set:function(a){a&&this.model.set({value:a})},
-search:function(a){this.closeAutocomplete();VS.app.searchBox.searchEvent(a)},enableEdit:function(){if(this.modes.editing!="is"){this.setMode("is","editing");this.deselectFacet();this.box.val()==""&&this.box.val(this.model.get("value"))}this.flags.canClose=false;this.searchAutocomplete();VS.app.searchBox.disableFacets(this);VS.app.searchBox.addFocus();_.defer(function(){VS.app.searchBox.addFocus()});this.box.is(":focus")||this.box.focus();this.resize()},deferDisableEdit:function(){this.flags.canClose=
-true;_.delay(_.bind(function(){this.flags.canClose&&!this.box.is(":focus")&&this.modes.editing=="is"&&this.modes.selected!="is"&&this.disableEdit()},this),250)},disableEdit:function(){var a=VS.utils.inflector.trim(this.box.val());a!=this.model.get("value")&&this.set(a);this.flags.canClose=false;this.box.selectRange(0,0);this.box.blur();this.setMode("not","editing");this.closeAutocomplete();VS.app.searchBox.removeFocus()},selectFacet:function(){this.flags.canClose=false;var a=VS.app.searchBox.allSelected();
-a||VS.app.searchBox.disableFacets(this);if(this.box.is(":focus")){this.box.setCursorPosition(0);this.box.blur()}this.closeAutocomplete();this.setMode("is","selected");this.setMode("not","editing");if(!a){c(document).unbind("keydown.facet",this.keydown);c(document).unbind("click.facet",this.deselectFacet);_.defer(_.bind(function(){c(document).unbind("keydown.facet").bind("keydown.facet",this.keydown);c(document).unbind("click.facet").one("click.facet",this.deselectFacet)},this));VS.app.searchBox.addFocus()}},
-deselectFacet:function(){if(this.modes.selected=="is"){this.setMode("not","selected");this.closeAutocomplete();VS.app.searchBox.removeFocus()}c(document).unbind("keydown.facet",this.keydown);c(document).unbind("click.facet",this.deselectFacet)},isFocused:function(){return this.box.is(":focus")},showDelete:function(){c(this.el).addClass("search_facet_maybe_delete")},hideDelete:function(){c(this.el).removeClass("search_facet_maybe_delete")},setCursorAtEnd:function(a){a==-1?this.box.setCursorPosition(this.box.val().length):
-this.box.setCursorPosition(0)},remove:function(){var a=this.model.has("value");this.deselectFacet();this.disableEdit();VS.app.searchQuery.remove(this.model);a?this.search():VS.app.searchBox.renderFacets();VS.app.searchBox.focusNextFacet(this,0,{viewPosition:this.options.order})},selectText:function(){this.box.selectRange(0,this.box.val().length)},keydown:function(a){var b=VS.app.hotkeys.key(a);if(b=="enter"&&this.box.val()){this.disableEdit();this.search(a)}else if(b=="left"){if(this.box.getCursorPosition()==
-0&&!this.box.getSelection().length)if(this.modes.selected=="is"){this.deselectFacet();VS.app.searchBox.focusNextFacet(this,-1,{startAtEnd:true})}else this.selectFacet()}else if(b=="right")if(this.modes.selected=="is"){a.preventDefault();this.deselectFacet();this.setCursorAtEnd(0);this.enableEdit()}else{if(this.box.getCursorPosition()==this.box.val().length){a.preventDefault();this.disableEdit();VS.app.searchBox.focusNextFacet(this,1)}}else if(VS.app.hotkeys.shift&&b=="tab"){a.preventDefault();this.deselectFacet();
-this.disableEdit();VS.app.searchBox.focusNextFacet(this,-1,{startAtEnd:true,skipToFacet:true,selectText:true})}else if(b=="tab"){a.preventDefault();this.deselectFacet();this.disableEdit();VS.app.searchBox.focusNextFacet(this,1,{skipToFacet:true,selectText:true})}else if(VS.app.hotkeys.command&&(a.which==97||a.which==65)){a.preventDefault();VS.app.searchBox.selectAllFacets();return false}else if(VS.app.hotkeys.printable(a)&&this.modes.selected=="is"){VS.app.searchBox.focusNextFacet(this,-1,{startAtEnd:true});
-this.remove()}else if(b=="backspace")if(this.modes.selected=="is"){a.preventDefault();this.remove(a)}else if(this.box.getCursorPosition()==0&&!this.box.getSelection().length){a.preventDefault();this.selectFacet()}this.resize(a)}})})();
-(function(){var c=jQuery;VS.ui.SearchInput=Backbone.View.extend({type:"text",className:"search_input",events:{"keypress input":"keypress","keydown input":"keydown"},initialize:function(){_.bindAll(this,"removeFocus","addFocus","moveAutocomplete")},render:function(){c(this.el).html(JST.search_input({}));this.setMode("not","editing");this.setMode("not","selected");this.box=this.$("input");this.box.autoGrowInput();this.box.bind("updated.autogrow",this.moveAutocomplete);this.box.bind("blur",this.removeFocus);
-this.box.bind("focus",this.addFocus);this.setupAutocomplete();return this},setupAutocomplete:function(){this.box.autocomplete({minLength:1,delay:50,autoFocus:true,source:_.bind(this.autocompleteValues,this),select:_.bind(function(a,b){a.preventDefault();a.stopPropagation();var d=this.addTextFacetRemainder(b.item.value);VS.app.searchBox.addFacet(b.item.value,"",this.options.position+(d?1:0));this.clear();return false},this)});this.box.data("autocomplete")._renderMenu=function(a,b){var d="";_.each(b,
-_.bind(function(e){if(e.category&&e.category!=d){a.append('<li class="ui-autocomplete-category">'+e.category+"</li>");d=e.category}this._renderItem(a,e)},this))};this.box.autocomplete("widget").addClass("VS-interface")},autocompleteValues:function(a,b){var d=a.term.match(/\w+$/);d=VS.utils.inflector.escapeRegExp(d&&d[0]||" ");var e=VS.options.callbacks.categoryMatches()||[],f=RegExp("^"+d,"i");d=c.grep(e,function(g){return f.test(g.label||g)});b(_.sortBy(d,function(g){return g.label?g.category+"-"+
-g.label:g}))},moveAutocomplete:function(){var a=this.box.data("autocomplete");a&&a.menu.element.position({my:"left top",at:"left bottom",of:this.box.data("autocomplete").element,collision:"none"})},addTextFacetRemainder:function(a){var b=this.box.val(),d=b.match(/\b(\w+)$/);if(d&&a.indexOf(d[0])==0)b=b.replace(/\b(\w+)$/,"");(b=b.replace("^s+|s+$",""))&&VS.app.searchBox.addFacet("text",b,this.options.position);return b},focus:function(a){this.addFocus();this.box.focus();a&&this.selectText()},blur:function(){this.box.blur();
-this.removeFocus()},removeFocus:function(){VS.app.searchBox.removeFocus();this.setMode("not","editing");this.setMode("not","selected")},addFocus:function(){VS.app.searchBox.disableFacets(this);VS.app.searchBox.addFocus();this.setMode("is","editing");this.setMode("not","selected")},isFocused:function(){return this.box.is(":focus")},clear:function(){this.box.val("")},value:function(){return this.box.val()},setCursorAtEnd:function(a){a==-1?this.box.setCursorPosition(this.box.val().length):this.box.setCursorPosition(0)},
-selectText:function(){if(VS.app.searchBox.allSelected())this.setMode("is","selected");else{this.box.selectRange(0,this.box.val().length);this.box.focus()}},keypress:function(a){var b=VS.app.hotkeys.key(a);if(b=="enter")return VS.app.searchBox.searchEvent(a);else if(VS.app.hotkeys.colon(a)){this.box.trigger("resize.autogrow",a);b=this.box.val();var d=VS.options.callbacks.categoryMatches()||[];d=_.map(d,function(e){return e.label?e.label:e});if(_.contains(d,b)){a.preventDefault();a=this.addTextFacetRemainder(b);
-VS.app.searchBox.addFacet(b,"",this.options.position+(a?1:0));this.clear();return false}}else if(b=="backspace")if(this.box.getCursorPosition()==0&&!this.box.getSelection().length){a.preventDefault();a.stopPropagation();a.stopImmediatePropagation();VS.app.searchBox.resizeFacets();return false}},keydown:function(a){var b=VS.app.hotkeys.key(a);if(b=="left"){if(this.box.getCursorPosition()==0){a.preventDefault();VS.app.searchBox.focusNextFacet(this,-1,{startAtEnd:true})}}else if(b=="right"){if(this.box.getCursorPosition()==
-this.box.val().length){a.preventDefault();VS.app.searchBox.focusNextFacet(this,1,{selectFacet:true})}}else if(VS.app.hotkeys.shift&&b=="tab"){a.preventDefault();VS.app.searchBox.focusNextFacet(this,-1,{selectText:true})}else if(b=="tab"){a.preventDefault();b=this.box.val();if(b.length){var d=this.addTextFacetRemainder(b);VS.app.searchBox.addFacet(b,"",this.options.position+(d?1:0))}else VS.app.searchBox.focusNextFacet(this,0,{skipToFacet:true,selectText:true})}else if(VS.app.hotkeys.command&&String.fromCharCode(a.which).toLowerCase()==
-"a"){a.preventDefault();VS.app.searchBox.selectAllFacets();return false}else if(b=="backspace"&&!VS.app.searchBox.allSelected())if(this.box.getCursorPosition()==0&&!this.box.getSelection().length){a.preventDefault();VS.app.searchBox.focusNextFacet(this,-1,{backspace:true});return false}this.box.trigger("resize.autogrow",a)}})})();(function(){var c=jQuery;Backbone.View.prototype.setMode=function(a,b){this.modes||(this.modes={});if(this.modes[b]!==a){c(this.el).setMode(a,b);this.modes[b]=a}}})();
-(function(){var c=jQuery;VS.app.hotkeys={KEYS:{"16":"shift","17":"control","91":"command","93":"command","224":"command","13":"enter","37":"left","38":"upArrow","39":"right","40":"downArrow","46":"delete","8":"backspace","9":"tab","188":"comma"},initialize:function(){_.bindAll(this,"down","up","blur");c(document).bind("keydown",this.down);c(document).bind("keyup",this.up)},down:function(a){if(a=this.KEYS[a.which])this[a]=true},up:function(a){if(a=this.KEYS[a.which])this[a]=false},blur:function(){for(var a in this.KEYS)this[this.KEYS[a]]=
-false},key:function(a){return this.KEYS[a.which]},colon:function(a){return(a=a.which)&&String.fromCharCode(a)==":"},printable:function(a){var b=a.which;if(a.type=="keydown"){if(b==32||b>=48&&b<=90||b>=96&&b<=111||b>=186&&b<=192||b>=219&&b<=222)return true}else if(b>=32&&b<=126||b>=160&&b<=500||String.fromCharCode(b)==":")return true;return false}}})();
-(function(){VS.utils.inflector={trim:function(c){return c.trim?c.trim():c.replace(/^\s+|\s+$/g,"")},escapeRegExp:function(c){return c.replace(/([.*+?^${}()|[\]\/\\])/g,"\\$1")}}})();
-(function(){var c=jQuery;c.fn.extend({setMode:function(a,b){b=b||"mode";var d=RegExp("\\w+_"+b+"(\\s|$)","g"),e=a===null?"":a+"_"+b;this.each(function(){this.className=(this.className.replace(d,"")+" "+e).replace(/\s\s/g," ")});return e},autoGrowInput:function(){return this.each(function(){var a=c(this),b=c("<div />").css({opacity:0,top:-9999,left:-9999,position:"absolute",whiteSpace:"nowrap"}).addClass("VS-input-width-tester").addClass("VS-interface");a.next(".VS-input-width-tester").remove();a.after(b);
-a.unbind("keydown.autogrow keypress.autogrow resize.autogrow change.autogrow").bind("keydown.autogrow keypress.autogrow resize.autogrow change.autogrow",function(d,e){if(e)d=e;var f=a.val();if(VS.app.hotkeys.key(d)=="backspace"){var g=a.getCursorPosition();if(g>0)f=f.slice(0,g-1)+f.slice(g,f.length)}else if(VS.app.hotkeys.printable(d)&&!VS.app.hotkeys.command)f+=String.fromCharCode(d.which);f=f.replace(/&/g,"&amp;").replace(/\s/g,"&nbsp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");b.html(f);a.width(b.width()+
-3);a.trigger("updated.autogrow")});a.trigger("resize.autogrow")})},getCursorPosition:function(){var a=0,b=this.get(0);if(document.selection){b.focus();a=document.selection.createRange();var d=document.selection.createRange().text.length;a.moveStart("character",-b.value.length);a=a.text.length-d}else if(b&&c(b).is(":visible")&&b.selectionStart!=null)a=b.selectionStart;return a},setCursorPosition:function(a){return this.each(function(){return c(this).selectRange(a,a)})},selectRange:function(a,b){return this.each(function(){if(this.setSelectionRange){this.focus();
-this.setSelectionRange(a,b)}else if(this.createTextRange){var d=this.createTextRange();d.collapse(true);d.moveEnd("character",b);d.moveStart("character",a);d.select()}})},getSelection:function(){var a=this[0];if(a.selectionStart!=null){var b=a.selectionStart,d=a.selectionEnd;return{start:b,end:d,length:d-b,text:a.value.substr(b,d-b)}}else if(document.selection){var e=document.selection.createRange();if(e){a=a.createTextRange();b=a.duplicate();a.moveToBookmark(e.getBookmark());b.setEndPoint("EndToStart",
-a);b=b.text.length;d=b+e.text.length;return{start:b,end:d,length:d-b,text:e.text}}}return{start:0,end:0,length:0}}})})();
-(function(){VS.app.SearchParser={ALL_FIELDS:/('.+?'|".+?"|[^'"\s]{2}\S*):\s*('.+?'|".+?"|[^'"\s]{2}\S*)/g,FIELD:/(.+?):\s*/,parse:function(c){c=this._extractAllFacets(c);VS.app.searchQuery.refresh(c);return c},_extractAllFacets:function(c){for(var a=[],b=c;c;){var d,e;b=c;var f=this._extractNextField(c);if(f)if(f.indexOf(":")!=-1){d=f.match(this.FIELD)[1];e=f.replace(this.FIELD,"").replace(/(^['"]|['"]$)/g,"");c=VS.utils.inflector.trim(c.replace(f,""))}else{if(f.indexOf(":")==-1){d="text";e=f;c=VS.utils.inflector.trim(c.replace(e,
-""))}}else{d="text";e=this._extractSearchText(c);c=VS.utils.inflector.trim(c.replace(e,""))}if(d&&e){f=new VS.model.SearchFacet({category:d,value:VS.utils.inflector.trim(e)});a.push(f)}if(b==c)break}return a},_extractNextField:function(c){var a=c.match(/^\s*(\S+)\s+(?=\w+:\s?(('.+?'|".+?")|([^'"]{2}\S*)))/);return a&&a.length>=1?a[1]:this._extractFirstField(c)},_extractFirstField:function(c){return(c=c.match(this.ALL_FIELDS))&&c.length&&c[0]},_extractSearchText:function(c){return VS.utils.inflector.trim((c||
-"").replace(this.ALL_FIELDS,""))}}})();(function(){VS.model.SearchFacet=Backbone.Model.extend({serialize:function(){var c=this.get("category"),a=VS.utils.inflector.trim(this.get("value"));if(!a)return"";if(!_.contains(VS.options.unquotable||[],c)&&c!="text")a='"'+a+'"';if(c!="text")c+=": ";else c="";return c+a}})})();
-(function(){VS.model.SearchQuery=Backbone.Collection.extend({model:VS.model.SearchFacet,value:function(){return this.map(function(c){return c.serialize()}).join(" ")},find:function(c){var a=this.detect(function(b){return b.get("category")==c});return a&&a.get("value")},count:function(c){return this.select(function(a){return a.get("category")==c}).length},values:function(c){var a=this.select(function(b){return b.get("category")==c});return _.map(a,function(b){return b.get("value")})},has:function(c,
-a){return this.any(function(b){return a?b.get("category")==c&&b.get("value")==a:b.get("category")==c})},withoutCategory:function(c){return this.map(function(a){if(a.get("category")!=c)return a.serialize()}).join(" ")}})})();
-(function(){window.JST=window.JST||{};window.JST.search_box=_.template('<div class="VS-search">  <div id="search_container">    <div class="VS-search-box-wrapper VS-search-box">      <div class="icon VS-icon-search"></div>      <div class="search_inner"></div>      <div class="icon VS-icon-cancel VS-cancel-search-box" title="clear search"></div>    </div>  </div></div>');window.JST.search_facet=_.template('<% if (model.has(\'category\')) { %>  <div class="category"><%= model.get(\'category\') %>:</div><% } %><div class="search_facet_input_container">  <input type="text" class="search_facet_input VS-interface" value="" /></div><div class="search_facet_remove icon VS-icon-cancel"></div>');
-window.JST.search_input=_.template('<input type="text" />')})();
+// This is the annotated source code for
+// [VisualSearch.js](http://documentcloud.github.com/visualsearch/),
+// a rich search box for real data.
+// 
+// The annotated source HTML is generated by
+// [Docco](http://jashkenas.github.com/docco/).
+
+/** @license VisualSearch.js 0.1.0
+ *  (c) 2011 Samuel Clay, @samuelclay, DocumentCloud Inc.
+ *  VisualSearch.js may be freely distributed under the MIT license.
+ *  For all details and documentation:
+ *  http://documentcloud.github.com/visualsearch
+ */
+
+(function() {
+
+  var $ = jQuery; // Handle namespaced jQuery
+
+  // Setting up VisualSearch globals. These will eventually be made instance-based.
+  if (!window.VS) window.VS = {};
+  if (!VS.app)    VS.app    = {};
+  if (!VS.ui)     VS.ui     = {};
+  if (!VS.model)  VS.model  = {};
+  if (!VS.utils)  VS.utils  = {};
+
+  // Sets the version for VisualSearch to be used programatically elsewhere.
+  VS.VERSION = '0.1.0';
+
+  // Entry-point used to tie all parts of VisualSearch together. It will either attach
+  // itself to `options.container`, or pass back the `searchBox` so it can be rendered
+  // at will.
+  VS.init = function(options) {
+    var defaults = {
+      container   : '',
+      query       : '',
+      unquotable  : [],
+      callbacks   : {
+        search          : $.noop,
+        focus           : $.noop,
+        facetMatches    : $.noop,
+        valueMatches    : $.noop
+      }
+    };
+    VS.options           = _.extend({}, defaults, options);
+    VS.options.callbacks = _.extend({}, defaults.callbacks, options.callbacks);
+
+    VS.app.hotkeys.initialize();
+    VS.app.searchQuery   = new VS.model.SearchQuery();
+    VS.app.searchBox     = new VS.ui.SearchBox(options);
+
+    if (options.container) {
+      var searchBox = VS.app.searchBox.render().el;
+      $(options.container).html(searchBox);
+    }
+    VS.app.searchBox.value(options.query || '');
+
+    // Disable page caching for browsers that incorrectly cache the visual search inputs.
+    // This is forced the browser to re-render the page when it is retrieved in its history.
+    $(window).bind('unload', function(e) {});
+
+    // Gives the user back a reference to the `searchBox` so they
+    // can use public methods.
+    return VS.app.searchBox;
+  };
+
+})();
+(function() {
+
+var $ = jQuery; // Handle namespaced jQuery
+
+// The search box is responsible for managing the many facet views and input views.
+VS.ui.SearchBox = Backbone.View.extend({
+  
+  id  : 'search',
+  
+  events : {
+    'click .VS-cancel-search-box' : 'clearSearch',
+    'mousedown .VS-search-box'    : 'maybeFocusSearch',
+    'dblclick .VS-search-box'     : 'highlightSearch',
+    'click .VS-search-box'        : 'maybeTripleClick'
+  },
+
+  // Creating a new SearchBox registers handlers for re-rendering facets when necessary,
+  // as well as handling typing when a facet is selected.
+  initialize : function() {
+    this.flags = {
+      allSelected : false
+    };
+    this.facetViews = [];
+    this.inputViews = [];
+    _.bindAll(this, 'renderFacets', '_maybeDisableFacets', 'disableFacets', 
+              'deselectAllFacets');
+    VS.app.searchQuery.bind('refresh', this.renderFacets);
+    $(document).bind('keydown', this._maybeDisableFacets);
+  },
+
+  // Renders the search box, but requires placement on the page through `this.el`.
+  render : function() {
+    $(this.el).append(JST['search_box']({}));
+    $(document.body).setMode('no', 'search');
+        
+    return this;
+  },
+  
+  // # Querying Facets #
+  
+  // Either gets a serialized query string or sets the faceted query from a query string.
+  value : function(query) {
+    if (query == null) return this.getQuery();
+    return this.setQuery(query);
+  },
+  
+  // Uses the VS.app.searchQuery collection to serialize the current query from the various
+  // facets that are in the search box.
+  getQuery : function() {
+    var query           = [];
+    var inputViewsCount = this.inputViews.length;
+    
+    VS.app.searchQuery.each(_.bind(function(facet, i) {
+      query.push(this.inputViews[i].value());
+      query.push(facet.serialize());
+    }, this));
+    
+    if (inputViewsCount) {
+      query.push(this.inputViews[inputViewsCount-1].value());
+    }
+    
+    return _.compact(query).join(' ');
+  },
+
+  // Takes a query string and uses the SearchParser to parse and render it. Note that
+  // `VS.app.SearchParser` refreshes the `VS.app.searchQuery` collection, which is bound
+  // here to call `this.renderFacets`.
+  setQuery : function(query) {
+    this.currentQuery = query;
+    VS.app.SearchParser.parse(query);
+  },
+  
+  // Returns the position of a facet/input view. Useful when moving between facets.
+  viewPosition : function(view) {
+    var views    = view.type == 'facet' ? this.facetViews : this.inputViews;
+    var position = _.indexOf(views, view);
+    if (position == -1) position = 0;
+    return position;
+  },
+
+  // Used to launch a search. Hitting enter or clicking the search button.
+  searchEvent : function(e) {
+    var query = this.value();
+    this.focusSearch(e);
+    if (VS.options.callbacks.search(query) !== false) {
+      this.value(query);
+    }
+  },
+  
+  // # Rendering Facets #
+  
+  // Add a new facet. Facet will be focused and ready to accept a value. Can also
+  // specify position, in the case of adding facets from an inbetween input.
+  addFacet : function(category, initialQuery, position) {
+    category     = VS.utils.inflector.trim(category);
+    initialQuery = VS.utils.inflector.trim(initialQuery || '');
+    if (!category) return;
+    
+    var model = new VS.model.SearchFacet({
+      category : category,
+      value    : initialQuery || ''
+    });
+    VS.app.searchQuery.add(model, {at: position});
+    this.renderFacets();
+    var facetView = _.detect(this.facetViews, function(view) {
+      if (view.model == model) return true;
+    });
+    
+    _.defer(function() {
+      facetView.enableEdit();
+    });
+  },
+
+  // Renders each facet as a searchFacet view.
+  renderFacets : function() {
+    this.facetViews = [];
+    this.inputViews = [];
+    
+    this.$('.VS-search-inner').empty();
+    
+    VS.app.searchQuery.each(_.bind(function(facet, i) {
+      this.renderFacet(facet, i);
+    }, this));
+    
+    // Add on an n+1 empty search input on the very end.
+    this.renderSearchInput();
+  },
+  
+  // Render a single facet, using its category and query value.
+  renderFacet : function(facet, position) {
+    var view = new VS.ui.SearchFacet({
+      model : facet,
+      order : position
+    });
+    
+    // Input first, facet second.
+    this.renderSearchInput();
+    this.facetViews.push(view);
+    this.$('.VS-search-inner').children().eq(position*2).after(view.render().el);
+    
+    view.calculateSize();
+    _.defer(_.bind(view.calculateSize, view));
+    
+    return view;
+  },
+  
+  // Render a single input, used to create and autocomplete facets
+  renderSearchInput : function() {
+    var input = new VS.ui.SearchInput({position: this.inputViews.length});
+    this.$('.VS-search-inner').append(input.render().el);
+    this.inputViews.push(input);
+  },
+  
+  // # Modifying Facets #
+  
+  // Clears out the search box. Command+A + delete can trigger this, as can a cancel button.
+  clearSearch : function(e) {
+    this.disableFacets();
+    this.value('');
+    this.flags.allSelected = false;
+    this.focusSearch(e);
+  },
+  
+  // Command+A selects all facets.
+  selectAllFacets : function() {
+    this.flags.allSelected = true;
+    
+    $(document).one('click.selectAllFacets', this.deselectAllFacets);
+    
+    _.each(this.facetViews, function(facetView, i) {
+      facetView.selectFacet();
+    });
+    _.each(this.inputViews, function(inputView, i) {
+      inputView.selectText();
+    });
+  },
+  
+  // Used by facets and input to see if all facets are currently selected.
+  allSelected : function(deselect) {
+    if (deselect) this.flags.allSelected = false;
+    return this.flags.allSelected;
+  },
+  
+  // After `selectAllFacets` is engaged, this method is bound to the entire document.
+  // This immediate disables and deselects all facets, but it also checks if the user
+  // has clicked on either a facet or an input, and properly selects the view.
+  deselectAllFacets : function(e) {
+    this.disableFacets();
+    
+    if (this.$(e.target).is('.category,input')) {
+      var el   = $(e.target).closest('.search_facet,.search_input');
+      var view = _.detect(this.facetViews.concat(this.inputViews), function(v) {
+        return v.el == el[0];
+      });
+      if (view.type == 'facet') {
+        view.selectFacet();
+      } else if (view.type == 'input') {
+        _.defer(function() {
+          view.enableEdit(true);
+        });
+      }
+    }
+  },
+  
+  // Disables all facets except for the passed in view. Used when switching between
+  // facets, so as not to have to keep state of active facets.
+  disableFacets : function(keepView) {
+    _.each(this.inputViews, function(view) {
+      if (view && view != keepView &&
+          (view.modes.editing == 'is' || view.modes.selected == 'is')) {
+        view.disableEdit();
+      }
+    });
+    _.each(this.facetViews, function(view) {
+      if (view && view != keepView &&
+          (view.modes.editing == 'is' || view.modes.selected == 'is')) {
+        view.disableEdit();
+        view.deselectFacet();
+      }
+    });
+    
+    this.flags.allSelected = false;
+    this.removeFocus();
+    $(document).unbind('click.selectAllFacets');
+  },
+  
+  // Resize all inputs to account for extra keystrokes which may be changing the facet
+  // width incorrectly. This is a safety check to ensure inputs are correctly sized.
+  resizeFacets : function(view) {
+    _.each(this.facetViews, function(facetView, i) {
+      if (!view || facetView == view) {
+        facetView.resize();
+      }
+    });
+  },
+  
+  // Handles keydown events on the document. Used to complete the Cmd+A deletion, and
+  // blurring focus.
+  _maybeDisableFacets : function(e) {
+    if (this.flags.allSelected && VS.app.hotkeys.key(e) == 'backspace') {
+      e.preventDefault();
+      this.clearSearch(e);
+      return false;
+    } else if (this.flags.allSelected && VS.app.hotkeys.printable(e)) {
+      this.clearSearch(e);
+    }
+  },
+  
+  // # Focusing Facets #
+  
+  // Move focus between facets and inputs. Takes a direction as well as many options
+  // for skipping over inputs and only to facets, placement of cursor position in facet 
+  // (i.e. at the end), and selecting the text in the input/facet.
+  focusNextFacet : function(currentView, direction, options) {
+    options = options || {};
+    var viewCount    = this.facetViews.length;
+    var viewPosition = options.viewPosition || this.viewPosition(currentView);
+
+    if (!options.skipToFacet) {
+      // Correct for bouncing between matching text and facet arrays.
+      if (currentView.type == 'text'  && direction > 0) direction -= 1;
+      if (currentView.type == 'facet' && direction < 0) direction += 1;
+    } else if (options.skipToFacet && currentView.type == 'text' && 
+               viewCount == viewPosition && direction >= 0) {
+      // Special case of looping around to a facet from the last search input box.
+      viewPosition = 0;
+      direction    = 0;
+    }
+    var view, next = Math.min(viewCount, viewPosition + direction);
+    
+    if (currentView.type == 'text') {
+      if (next >= 0 && next < viewCount) {
+        view = this.facetViews[next];
+      } else if (next == viewCount) {
+        view = this.inputViews[this.inputViews.length-1];
+      }
+      if (view && options.selectFacet && view.type == 'facet') {
+        view.selectFacet();
+      } else if (view) {
+        view.enableEdit();
+        view.setCursorAtEnd(direction || options.startAtEnd);
+      }
+    } else if (currentView.type == 'facet') {
+      if (options.skipToFacet) {
+        if (next >= viewCount || next < 0) {
+          view = _.last(this.inputViews);
+          view.enableEdit();
+        } else {
+          view = this.facetViews[next];
+          view.enableEdit();
+          view.setCursorAtEnd(direction || options.startAtEnd);
+        }
+      } else {
+        view = this.inputViews[next];
+        view.enableEdit();
+      }
+    }
+    if (options.selectText) view.selectText();
+    this.resizeFacets();
+  },
+
+  maybeFocusSearch : function(e) {
+    if ($(e.target).is('.VS-search-box') || 
+        $(e.target).is('.VS-search-inner') || 
+        e.type == 'keydown') {
+      this.focusSearch(e);
+    }
+  },
+  
+  // Bring focus to last input field.
+  focusSearch : function(e, selectText) {
+    var view = this.inputViews[this.inputViews.length-1];
+    view.enableEdit(selectText);
+    if (!selectText) view.setCursorAtEnd(-1);
+    if (e.type == 'keydown') {
+      view.keydown(e);
+      view.box.trigger('keydown');
+    }
+    _.defer(_.bind(function() {
+      if (!this.$('input:focus').length) {
+        view.enableEdit(selectText);
+      }
+    }, this));
+  },
+  
+  // Double-clicking on the search wrapper should select the existing text in
+  // the last search input. Also start the triple-click timer.
+  highlightSearch : function(e) {
+    if ($(e.target).is('.VS-search-box') || 
+        $(e.target).is('.VS-search-inner') || 
+        e.type == 'keydown') {
+      var lastinput = this.inputViews[this.inputViews.length-1];
+      lastinput.startTripleClickTimer();
+      this.focusSearch(e, true);
+    }
+  },
+  
+  maybeTripleClick : function(e) {
+    var lastinput = this.inputViews[this.inputViews.length-1];
+    return lastinput.maybeTripleClick(e);
+  },
+  
+  // Used to show the user is focused on some input inside the search box.
+  addFocus : function() {
+    VS.options.callbacks.focus();
+    this.$('.VS-search-box').addClass('VS-focus');
+  },
+
+  // User is no longer focused on anything in the search box.
+  removeFocus : function() {
+    var focus = _.any(this.facetViews.concat(this.inputViews), function(view) {
+      return view.isFocused();
+    });
+    if (!focus) this.$('.VS-search-box').removeClass('VS-focus');
+  },
+  
+  // Show a menu which adds pre-defined facets to the search box. This is unused for now.
+  showFacetCategoryMenu : function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (this.facetCategoryMenu && this.facetCategoryMenu.modes.open == 'is') {
+      return this.facetCategoryMenu.close();
+    }
+    
+    var items = [
+      {title: 'Account', onClick: _.bind(this.addFacet, this, 'account', '')},
+      {title: 'Project', onClick: _.bind(this.addFacet, this, 'project', '')},
+      {title: 'Filter', onClick: _.bind(this.addFacet, this, 'filter', '')},
+      {title: 'Access', onClick: _.bind(this.addFacet, this, 'access', '')}
+    ];
+    
+    var menu = this.facetCategoryMenu || (this.facetCategoryMenu = new dc.ui.Menu({
+      items       : items,
+      standalone  : true
+    }));
+    
+    this.$('.VS-icon-search').after(menu.render().open().content);
+    return false;
+  }
+  
+});
+
+})();
+(function() {
+
+var $ = jQuery; // Handle namespaced jQuery
+
+// This is the visual search facet that holds the category and its autocompleted
+// input field.
+VS.ui.SearchFacet = Backbone.View.extend({
+
+  type : 'facet',
+
+  className : 'search_facet',
+
+  events : {
+    'click .category'           : 'selectFacet',
+    'keydown input'             : 'keydown',
+    'mousedown input'           : 'enableEdit',
+    'mouseover .VS-icon-cancel' : 'showDelete',
+    'mouseout .VS-icon-cancel'  : 'hideDelete',
+    'click .VS-icon-cancel'     : 'remove'
+  },
+
+  initialize : function(options) {
+    this.flags = {
+      canClose : false
+    };
+    _.bindAll(this, 'set', 'keydown', 'deselectFacet', 'deferDisableEdit');
+  },
+
+  // Rendering the facet sets up autocompletion, events on blur, and populates
+  // the facet's input with its starting value.
+  render : function() {
+    $(this.el).html(JST['search_facet']({
+      model : this.model
+    }));
+
+    this.setMode('not', 'editing');
+    this.setMode('not', 'selected');
+    this.box = this.$('input');
+    this.box.val(this.model.get('value'));
+    this.box.bind('blur', this.deferDisableEdit);
+    this.setupAutocomplete();
+
+    return this;
+  },
+
+  // This method is used to setup the facet's input to auto-grow.
+  // This is defered in the searchBox so it can be attached to the
+  // DOM to get the correct font-size.
+  calculateSize : function() {
+    this.box.autoGrowInput();
+    this.box.unbind('updated.autogrow');
+    this.box.bind('updated.autogrow', _.bind(this.moveAutocomplete, this));
+  },
+
+  // Forces a recalculation of this facet's input field's value. Called when
+  // the facet is focused, removed, or otherwise modified.
+  resize : function(e) {
+    this.box.trigger('resize.autogrow', e);
+  },
+
+  // Watches the facet's input field to see if it matches the beginnings of
+  // words in `autocompleteValues`, which is different for every category.
+  // If the value, when selected from the autocompletion menu, is different
+  // than what it was, commit the facet and search for it.
+  setupAutocomplete : function() {
+    this.box.autocomplete({
+      source    : _.bind(this.autocompleteValues, this),
+      minLength : 0,
+      delay     : 0,
+      autoFocus : true,
+      position  : {offset : "0 5"},
+      select    : _.bind(function(e, ui) {
+        e.preventDefault();
+        var originalValue = this.model.get('value');
+        this.set(ui.item.value);
+        if (originalValue != ui.item.value || this.box.val() != ui.item.value) {
+          this.search(e);
+        }
+        return false;
+      }, this)
+    });
+
+    this.box.autocomplete('widget').addClass('VS-interface');
+  },
+
+  // As the facet's input field grows, it may move to the next line in the
+  // search box. `autoGrowInput` triggers an `updated` event on the input
+  // field, which is bound to this method to move the autocomplete menu.
+  moveAutocomplete : function() {
+    var autocomplete = this.box.data('autocomplete');
+    if (autocomplete) {
+      autocomplete.menu.element.position({
+        my        : "left top",
+        at        : "left bottom",
+        of        : this.box.data('autocomplete').element,
+        collision : "flip",
+        offset    : "0 5"
+      });
+    }
+  },
+
+  // When a user enters a facet and it is being edited, immediately show
+  // the autocomplete menu and size it to match the contents.
+  searchAutocomplete : function(e) {
+    var autocomplete = this.box.data('autocomplete');
+    if (autocomplete) {
+      var menu = autocomplete.menu.element;
+      autocomplete.search();
+
+      // Resize the menu based on the correctly measured width of what's bigger:
+      // the menu's original size or the menu items' new size.
+      menu.outerWidth(Math.max(
+        menu.width('').outerWidth(),
+        autocomplete.element.outerWidth()
+      ));
+    }
+  },
+
+  // Closes the autocomplete menu. Called on disabling, selecting, deselecting,
+  // and anything else that takes focus out of the facet's input field.
+  closeAutocomplete : function() {
+    var autocomplete = this.box.data('autocomplete');
+    if (autocomplete) autocomplete.close();
+  },
+
+  // Search terms used in the autocomplete menu. These are specific to the facet,
+  // and only match for the facet's category. The values are then matched on the
+  // first letter of any word in matches, and finally sorted according to the
+  // value's own category.
+  autocompleteValues : function(req, resp) {
+    var category = this.model.get('category');
+    var value    = this.model.get('value');
+    var searchTerm = req.term;
+
+    var matches = VS.options.callbacks.valueMatches(category) || [];
+
+    if (searchTerm && value != searchTerm) {
+      var re = VS.utils.inflector.escapeRegExp(searchTerm || '');
+      var matcher = new RegExp('\\b' + re, 'i');
+      matches = $.grep(matches, function(item) {
+        return matcher.test(item) ||
+               matcher.test(item.value) ||
+               matcher.test(item.label);
+      });
+    }
+
+    resp(_.sortBy(matches, function(match) {
+      if (match == value || match.value == value) return '';
+      else return match;
+    }));
+  },
+
+  // Sets the facet's model's value.
+  set : function(value) {
+    if (!value) return;
+    this.model.set({'value': value});
+  },
+
+  // Before the searchBox performs a search, we need to close the
+  // autocomplete menu.
+  search : function(e, direction) {
+    if (!direction) direction = 1;
+    this.closeAutocomplete();
+    VS.app.searchBox.searchEvent(e);
+    _.defer(_.bind(function() {
+      VS.app.searchBox.focusNextFacet(this, direction, {viewPosition: this.options.order});
+    }, this));
+  },
+
+  // Begin editing the facet's input. This is called when the user enters
+  // the input either from another facet or directly clicking on it.
+  //
+  // This method tells all other facets and inputs to disable so it can have
+  // the sole focus. It also prepares the autocompletion menu.
+  enableEdit : function() {
+    if (this.modes.editing != 'is') {
+      this.setMode('is', 'editing');
+      this.deselectFacet();
+      if (this.box.val() == '') {
+        this.box.val(this.model.get('value'));
+      }
+    }
+
+    this.flags.canClose = false;
+    VS.app.searchBox.disableFacets(this);
+    VS.app.searchBox.addFocus();
+    _.defer(function() {
+      VS.app.searchBox.addFocus();
+    });
+    this.resize();
+    this.searchAutocomplete();
+    this.box.focus();
+  },
+
+  // When the user blurs the input, they may either be going to another input
+  // or off the search box entirely. If they go to another input, this facet
+  // will be instantly disabled, and the canClose flag will be turned back off.
+  //
+  // However, if the user clicks elsewhere on the page, this method starts a timer
+  // that checks if any of the other inputs are selected or are being edited. If
+  // not, then it can finally close itself and its autocomplete menu.
+  deferDisableEdit : function() {
+    this.flags.canClose = true;
+    _.delay(_.bind(function() {
+      if (this.flags.canClose && !this.box.is(':focus') &&
+          this.modes.editing == 'is' && this.modes.selected != 'is') {
+        this.disableEdit();
+      }
+    }, this), 250);
+  },
+
+  // Called either by other facets receiving focus or by the timer in `deferDisableEdit`,
+  // this method will turn off the facet, remove any text selection, and close
+  // the autocomplete menu.
+  disableEdit : function() {
+    var newFacetQuery = VS.utils.inflector.trim(this.box.val());
+    if (newFacetQuery != this.model.get('value')) {
+      this.set(newFacetQuery);
+    }
+    this.flags.canClose = false;
+    this.box.selectRange(0, 0);
+    this.box.blur();
+    this.setMode('not', 'editing');
+    this.closeAutocomplete();
+    VS.app.searchBox.removeFocus();
+  },
+
+  // Selects the facet, which blurs the facet's input and highlights the facet.
+  // If this is the only facet being selected (and not part of a select all event),
+  // we attach a mouse/keyboard watcher to check if the next action by the user
+  // should delete this facet or just deselect it.
+  selectFacet : function(e) {
+    if (e) e.preventDefault();
+    var allSelected = VS.app.searchBox.allSelected();
+    if (this.modes.selected == 'is') return;
+
+    if (this.box.is(':focus')) {
+        this.box.setCursorPosition(0);
+        this.box.blur();
+    }
+
+    this.flags.canClose = false;
+    this.closeAutocomplete();
+    this.setMode('is', 'selected');
+    this.setMode('not', 'editing');
+    if (!allSelected || e) {
+      $(document).unbind('keydown.facet', this.keydown);
+      $(document).unbind('click.facet', this.deselectFacet);
+      _.defer(_.bind(function() {
+        $(document).unbind('keydown.facet').bind('keydown.facet', this.keydown);
+        $(document).unbind('click.facet').one('click.facet', this.deselectFacet);
+      }, this));
+      VS.app.searchBox.disableFacets(this);
+      VS.app.searchBox.addFocus();
+    }
+    return false;
+  },
+
+  // Turns off highlighting on the facet. Called in a variety of ways, this
+  // only deselects the facet if it is selected, and then cleans up the
+  // keyboard/mouse watchers that were created when the facet was first
+  // selected.
+  deselectFacet : function(e) {
+    if (e) e.preventDefault();
+    if (this.modes.selected == 'is') {
+      this.setMode('not', 'selected');
+      this.closeAutocomplete();
+      VS.app.searchBox.removeFocus();
+    }
+    $(document).unbind('keydown.facet', this.keydown);
+    $(document).unbind('click.facet', this.deselectFacet);
+    return false;
+  },
+
+  // Is the user currently focused in this facet's input field?
+  isFocused : function() {
+    return this.box.is(':focus');
+  },
+
+  // Hovering over the delete button styles the facet so the user knows that
+  // the delete button will kill the entire facet.
+  showDelete : function() {
+    $(this.el).addClass('search_facet_maybe_delete');
+  },
+
+  // On `mouseout`, the user is no longer hovering on the delete button.
+  hideDelete : function() {
+    $(this.el).removeClass('search_facet_maybe_delete');
+  },
+
+  // When switching between facets, depending on the direction the cursor is
+  // coming from, the cursor in this facet's input field should match the original
+  // direction.
+  setCursorAtEnd : function(direction) {
+    if (direction == -1) {
+      this.box.setCursorPosition(this.box.val().length);
+    } else {
+      this.box.setCursorPosition(0);
+    }
+  },
+
+  // Deletes the facet and sends the cursor over to the nearest input field.
+  remove : function(e) {
+    var committed = this.model.get('value');
+    this.deselectFacet();
+    this.disableEdit();
+    VS.app.searchQuery.remove(this.model);
+    if (committed) {
+      this.search(e, -1);
+    } else {
+      VS.app.searchBox.renderFacets();
+      VS.app.searchBox.focusNextFacet(this, -1, {viewPosition: this.options.order});
+    }
+  },
+
+  // Selects the text in the facet's input field. When the user tabs between
+  // facets, convention is to highlight the entire field.
+  selectText: function() {
+    this.box.selectRange(0, this.box.val().length);
+  },
+
+  // Handles all keyboard inputs when in the facet's input field. This checks
+  // for movement between facets and inputs, entering a new value that needs
+  // to be autocompleted, as well as the removal of this facet.
+  keydown : function(e) {
+    var key = VS.app.hotkeys.key(e);
+
+    if (key == 'enter' && this.box.val()) {
+      this.disableEdit();
+      this.search(e);
+    } else if (key == 'left') {
+      if (this.modes.selected == 'is') {
+        this.deselectFacet();
+        VS.app.searchBox.focusNextFacet(this, -1, {startAtEnd: -1});
+      } else if (this.box.getCursorPosition() == 0 && !this.box.getSelection().length) {
+        this.selectFacet();
+      }
+    } else if (key == 'right') {
+      if (this.modes.selected == 'is') {
+        e.preventDefault();
+        this.deselectFacet();
+        this.setCursorAtEnd(0);
+        this.enableEdit();
+      } else if (this.box.getCursorPosition() == this.box.val().length) {
+        e.preventDefault();
+        this.disableEdit();
+        VS.app.searchBox.focusNextFacet(this, 1);
+      }
+    } else if (VS.app.hotkeys.shift && key == 'tab') {
+      e.preventDefault();
+      VS.app.searchBox.focusNextFacet(this, -1, {
+        startAtEnd  : -1,
+        skipToFacet : true,
+        selectText  : true
+      });
+    } else if (key == 'tab') {
+      e.preventDefault();
+      VS.app.searchBox.focusNextFacet(this, 1, {
+        skipToFacet : true,
+        selectText  : true
+      });
+    } else if (VS.app.hotkeys.command && (e.which == 97 || e.which == 65)) {
+      e.preventDefault();
+      VS.app.searchBox.selectAllFacets();
+      return false;
+    } else if (VS.app.hotkeys.printable(e) && this.modes.selected == 'is') {
+      VS.app.searchBox.focusNextFacet(this, -1, {startAtEnd: -1});
+      this.remove(e);
+    } else if (key == 'backspace') {
+      if (this.modes.selected == 'is') {
+        e.preventDefault();
+        this.remove(e);
+      } else if (this.box.getCursorPosition() == 0 &&
+                 !this.box.getSelection().length) {
+        e.preventDefault();
+        this.selectFacet();
+      }
+    }
+
+    this.resize(e);
+  }
+
+});
+
+})();
+(function() {
+
+var $ = jQuery; // Handle namespaced jQuery
+
+// This is the visual search input that is responsible for creating new facets.
+// There is one input placed in between all facets.
+VS.ui.SearchInput = Backbone.View.extend({
+
+  type : 'text',
+
+  className : 'search_input',
+
+  events : {
+    'keypress input'  : 'keypress',
+    'keydown input'   : 'keydown',
+    'click input'     : 'maybeTripleClick',
+    'dblclick input'  : 'startTripleClickTimer'
+  },
+
+  initialize : function() {
+    this.flags = {
+      canClose : false
+    };
+    _.bindAll(this, 'removeFocus', 'addFocus', 'moveAutocomplete', 'deferDisableEdit');
+  },
+
+  // Rendering the input sets up autocomplete, events on focusing and blurring
+  // the input, and the auto-grow of the input.
+  render : function() {
+    $(this.el).html(JST['search_input']({}));
+
+    this.setMode('not', 'editing');
+    this.setMode('not', 'selected');
+    this.box = this.$('input');
+    this.box.autoGrowInput();
+    this.box.bind('updated.autogrow', this.moveAutocomplete);
+    this.box.bind('blur',  this.deferDisableEdit);
+    this.box.bind('focus', this.addFocus);
+    this.setupAutocomplete();
+
+    return this;
+  },
+
+  // Watches the input and presents an autocompleted menu, taking the
+  // remainder of the input field and adding a separate facet for it.
+  //
+  // See `addTextFacetRemainder` for explanation on how the remainder works.
+  setupAutocomplete : function() {
+    this.box.autocomplete({
+      minLength : 0,
+      delay     : 50,
+      autoFocus : true,
+      position  : {offset : "0 -1"},
+      source    : _.bind(this.autocompleteValues, this),
+      select    : _.bind(function(e, ui) {
+        e.preventDefault();
+        e.stopPropagation();
+        var remainder = this.addTextFacetRemainder(ui.item.value);
+        var position  = this.options.position + (remainder ? 1 : 0);
+        VS.app.searchBox.addFacet(ui.item.value, '', position);
+        return false;
+      }, this)
+    });
+
+    // Renders the results grouped by the cateries they belong to.
+    this.box.data('autocomplete')._renderMenu = function(ul, items) {
+      var category = '';
+      _.each(items, _.bind(function(item, i) {
+        if (item.category && item.category != category) {
+          ul.append('<li class="ui-autocomplete-category">'+item.category+'</li>');
+          category = item.category;
+        }
+        this._renderItem(ul, item);
+      }, this));
+    };
+
+    this.box.autocomplete('widget').addClass('VS-interface');
+  },
+
+  // Search terms used in the autocomplete menu. The values are matched on the
+  // first letter of any word in matches, and finally sorted according to the
+  // value's own category.
+  autocompleteValues : function(req, resp) {
+    var searchTerm   = req.term;
+    var lastWord     = searchTerm.match(/\w+$/); // Autocomplete only last word.
+    var re           = VS.utils.inflector.escapeRegExp(lastWord && lastWord[0] || ' ');
+    var prefixes     = VS.options.callbacks.facetMatches() || [];
+    var tutorEnabled = VS.options.facetTutor && VS.app.searchBox.getQuery() == '' &&
+                         VS.app.searchBox.inputViews.length == 1;
+
+    // Only match from the beginning of the word. If facetTutor is enabled and
+    // the search box is blank, match all prefixes in order to render a list of
+    // all available facets for the user to choose from.
+    var matcher    = new RegExp('^' + re, 'i');
+    var matches    = $.grep(prefixes, function(item) {
+      if (tutorEnabled) return true;
+      return item && matcher.test(item.label || item);
+    });
+
+    resp(_.sortBy(matches, function(match) {
+      if (match.label) return match.category + '-' + match.label;
+      else             return match;
+    }));
+  },
+
+  // Closes the autocomplete menu. Called on disabling, selecting, deselecting,
+  // and anything else that takes focus out of the facet's input field.
+  closeAutocomplete : function() {
+    var autocomplete = this.box.data('autocomplete');
+    if (autocomplete) autocomplete.close();
+  },
+
+  // As the input field grows, it may move to the next line in the
+  // search box. `autoGrowInput` triggers an `updated` event on the input
+  // field, which is bound to this method to move the autocomplete menu.
+  moveAutocomplete : function() {
+    var autocomplete = this.box.data('autocomplete');
+    if (autocomplete) {
+      autocomplete.menu.element.position({
+        my        : "left top",
+        at        : "left bottom",
+        of        : this.box.data('autocomplete').element,
+        collision : "none",
+        offset    : '0 -1'
+      });
+    }
+  },
+
+  // When a user enters a facet and it is being edited, immediately show
+  // the autocomplete menu and size it to match the contents.
+  searchAutocomplete : function(e) {
+    var autocomplete = this.box.data('autocomplete');
+    if (autocomplete) {
+      var menu = autocomplete.menu.element;
+      autocomplete.search();
+
+      // Resize the menu based on the correctly measured width of what's bigger:
+      // the menu's original size or the menu items' new size.
+      menu.outerWidth(Math.max(
+        menu.width('').outerWidth(),
+        autocomplete.element.outerWidth()
+      ));
+    }
+  },
+
+  // If a user searches for "word word category", the category would be
+  // matched and autocompleted, and when selected, the "word word" would
+  // also be caught as the remainder and then added in its own facet.
+  addTextFacetRemainder : function(facetValue) {
+    var boxValue = this.box.val();
+    var lastWord = boxValue.match(/\b(\w+)$/);
+    var re       = VS.utils.inflector.escapeRegExp(lastWord && lastWord[0] || ' ');
+    var matcher = new RegExp('^' + re, 'i');
+    if (lastWord && facetValue.search(matcher) == 0)
+      boxValue = boxValue.replace(/\b(\w+)$/, '');
+    
+    boxValue = boxValue.replace('^\s+|\s+$', '');
+    if (boxValue) {
+      VS.app.searchBox.addFacet('text', boxValue, this.options.position);
+    }
+    return boxValue;
+  },
+
+  // Directly called to focus the input. This is different from `addFocus`
+  // because this is not called by a focus event. This instead calls a
+  // focus event causing the input to become focused.
+  enableEdit : function(selectText) {
+    this.addFocus();
+    if (selectText) {
+      this.selectText();
+    }
+    this.box.focus();
+  },
+
+  // Event called on user focus on the input. Tells all other input and facets
+  // to give up focus, and starts revving the autocomplete.
+  addFocus : function() {
+    this.flags.canClose = false;
+    if (!VS.app.searchBox.allSelected()) {
+      VS.app.searchBox.disableFacets(this);
+    }
+    VS.app.searchBox.addFocus();
+    this.setMode('is', 'editing');
+    this.setMode('not', 'selected');
+    this.searchAutocomplete();
+  },
+
+  // Directly called to blur the input. This is different from `removeFocus`
+  // because this is not called by a blur event.
+  disableEdit : function() {
+    this.box.blur();
+    this.removeFocus();
+  },
+
+  // Event called when user blur's the input, either through the keyboard tabbing
+  // away or the mouse clicking off. Cleans up
+  removeFocus : function() {
+    this.flags.canClose = false;
+    VS.app.searchBox.removeFocus();
+    this.setMode('not', 'editing');
+    this.setMode('not', 'selected');
+    this.closeAutocomplete();
+  },
+
+  // When the user blurs the input, they may either be going to another input
+  // or off the search box entirely. If they go to another input, this facet
+  // will be instantly disabled, and the canClose flag will be turned back off.
+  //
+  // However, if the user clicks elsewhere on the page, this method starts a timer
+  // that checks if any of the other inputs are selected or are being edited. If
+  // not, then it can finally close itself and its autocomplete menu.
+  deferDisableEdit : function() {
+    this.flags.canClose = true;
+    _.delay(_.bind(function() {
+      if (this.flags.canClose &&
+          !this.box.is(':focus') &&
+          this.modes.editing == 'is') {
+        this.disableEdit();
+      }
+    }, this), 250);
+  },
+
+  // Starts a timer that will cause a triple-click, which highlights all facets.
+  startTripleClickTimer : function() {
+    this.tripleClickTimer = setTimeout(_.bind(function() {
+      this.tripleClickTimer = null;
+    }, this), 500);
+  },
+
+  // Event on click that checks if a triple click is in play. The
+  // `tripleClickTimer` is counting down, ready to be engaged and intercept
+  // the click event to force a select all instead.
+  maybeTripleClick : function(e) {
+    if (!!this.tripleClickTimer) {
+      e.preventDefault();
+      VS.app.searchBox.selectAllFacets();
+      return false;
+    }
+  },
+
+  // Is the user currently focused in the input field?
+  isFocused : function() {
+    return this.box.is(':focus');
+  },
+
+  // When serializing the facets, the inputs need to also have their values represented,
+  // in case they contain text that is not yet faceted (but will be once the search is
+  // completed).
+  value : function() {
+    return this.box.val();
+  },
+
+  // When switching between facets and inputs, depending on the direction the cursor
+  // is coming from, the cursor in this facet's input field should match the original
+  // direction.
+  setCursorAtEnd : function(direction) {
+    if (direction == -1) {
+      this.box.setCursorPosition(this.box.val().length);
+    } else {
+      this.box.setCursorPosition(0);
+    }
+  },
+
+  // Selects the entire range of text in the input. Useful when tabbing between inputs
+  // and facets.
+  selectText : function() {
+    this.box.selectRange(0, this.box.val().length);
+    if (!VS.app.searchBox.allSelected()) {
+      this.box.focus();
+    } else {
+      this.setMode('is', 'selected');
+    }
+  },
+
+  // Before the searchBox performs a search, we need to close the
+  // autocomplete menu.
+  search : function(e, direction) {
+    if (!direction) direction = 0;
+    this.closeAutocomplete();
+    VS.app.searchBox.searchEvent(e);
+    _.defer(_.bind(function() {
+      VS.app.searchBox.focusNextFacet(this, direction);
+    }, this));
+  },
+
+  // Callback fired on key press in the search box. We search when they hit return.
+  keypress : function(e) {
+    var key = VS.app.hotkeys.key(e);
+
+    if (key == 'enter') {
+      return this.search(e, 100);
+    } else if (VS.app.hotkeys.colon(e)) {
+      this.box.trigger('resize.autogrow', e);
+      var query    = this.box.val();
+      var prefixes = VS.options.callbacks.facetMatches() || [];
+      var labels   = _.map(prefixes, function(prefix) {
+        if (prefix.label) return prefix.label;
+        else              return prefix;
+      });
+      if (_.contains(labels, query)) {
+        e.preventDefault();
+        var remainder = this.addTextFacetRemainder(query);
+        var position  = this.options.position + (remainder?1:0);
+        VS.app.searchBox.addFacet(query, '', position);
+        return false;
+      }
+    } else if (key == 'backspace') {
+      if (this.box.getCursorPosition() == 0 && !this.box.getSelection().length) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        VS.app.searchBox.resizeFacets();
+        return false;
+      }
+    }
+  },
+
+  // Handles all keyboard inputs when in the input field. This checks
+  // for movement between facets and inputs, entering a new value that needs
+  // to be autocompleted, as well as stepping between facets with backspace.
+  keydown : function(e) {
+    var key = VS.app.hotkeys.key(e);
+
+    if (key == 'left') {
+      if (this.box.getCursorPosition() == 0) {
+        e.preventDefault();
+        VS.app.searchBox.focusNextFacet(this, -1, {startAtEnd: -1});
+      }
+    } else if (key == 'right') {
+      if (this.box.getCursorPosition() == this.box.val().length) {
+        e.preventDefault();
+        VS.app.searchBox.focusNextFacet(this, 1, {selectFacet: true});
+      }
+    } else if (VS.app.hotkeys.shift && key == 'tab') {
+      e.preventDefault();
+      VS.app.searchBox.focusNextFacet(this, -1, {selectText: true});
+    } else if (key == 'tab') {
+      e.preventDefault();
+      var value = this.box.val();
+      if (value.length) {
+        var remainder = this.addTextFacetRemainder(value);
+        var position  = this.options.position + (remainder?1:0);
+        VS.app.searchBox.addFacet(value, '', position);
+      } else {
+        VS.app.searchBox.focusNextFacet(this, 0, {
+          skipToFacet: true,
+          selectText: true
+        });
+      }
+    } else if (VS.app.hotkeys.command &&
+               String.fromCharCode(e.which).toLowerCase() == 'a') {
+      e.preventDefault();
+      VS.app.searchBox.selectAllFacets();
+      return false;
+    } else if (key == 'backspace' && !VS.app.searchBox.allSelected()) {
+      if (this.box.getCursorPosition() == 0 && !this.box.getSelection().length) {
+        e.preventDefault();
+        VS.app.searchBox.focusNextFacet(this, -1, {backspace: true});
+        return false;
+      }
+    }
+
+    this.box.trigger('resize.autogrow', e);
+  }
+
+});
+
+})();
+(function(){
+
+  var $ = jQuery; // Handle namespaced jQuery
+
+  // Makes the view enter a mode. Modes have both a 'mode' and a 'group',
+  // and are mutually exclusive with any other modes in the same group.
+  // Setting will update the view's modes hash, as well as set an HTML class
+  // of *[mode]_[group]* on the view's element. Convenient way to swap styles
+  // and behavior.
+  Backbone.View.prototype.setMode = function(mode, group) {
+    this.modes || (this.modes = {});
+    if (this.modes[group] === mode) return;
+    $(this.el).setMode(mode, group);
+    this.modes[group] = mode;
+  };
+
+})();
+(function() {
+
+var $ = jQuery; // Handle namespaced jQuery
+
+// DocumentCloud workspace hotkeys. To tell if a key is currently being pressed,
+// just ask `VS.app.hotkeys.[key]` on `keypress`, or ask `VS.app.hotkeys.key(e)`
+// on `keydown`.
+// 
+// For the most headache-free way to use this utility, check modifier keys,
+// like shift and command, with `VS.app.hotkeys.shift`, and check every other
+// key with `VS.app.hotkeys.key(e) == 'key_name'`.
+VS.app.hotkeys = {
+
+  // Keys that will be mapped to the `hotkeys` namespace.
+  KEYS: {
+    '16':  'shift',
+    '17':  'command',
+    '91':  'command',
+    '93':  'command',
+    '224': 'command',
+    '13':  'enter',
+    '37':  'left',
+    '38':  'upArrow',
+    '39':  'right',
+    '40':  'downArrow',
+    '46':  'delete',
+    '8':   'backspace',
+    '9':   'tab',
+    '188': 'comma'
+  },
+
+  // Binds global keydown and keyup events to listen for keys that match `this.KEYS`.
+  initialize : function() {
+    _.bindAll(this, 'down', 'up', 'blur');
+    $(document).bind('keydown', this.down);
+    $(document).bind('keyup', this.up);
+    // $(window).bind('blur', this.blur);
+  },
+  
+  // On `keydown`, turn on all keys that match.
+  down : function(e) {
+    var key = this.KEYS[e.which];
+    if (key) this[key] = true;
+  },
+
+  // On `keyup`, turn off all keys that match.
+  up : function(e) {
+    var key = this.KEYS[e.which];
+    if (key) this[key] = false;
+  },
+
+  // If an input is blurred, all keys need to be turned off, since they are no longer
+  // able to modify the document.
+  blur : function(e) {
+    for (var key in this.KEYS) this[this.KEYS[key]] = false;
+  },
+  
+  // Check a key from an event and return the common english name.
+  key : function(e) {
+    return this.KEYS[e.which];
+  },
+  
+  // Colon is special, since the value is different between browsers.
+  colon : function(e) {
+    var charCode = e.which;
+    return charCode && String.fromCharCode(charCode) == ":";
+  },
+  
+  // Check a key from an event and match it against any known characters.
+  // The `keyCode` is different depending on the event type: `keydown` vs. `keypress`.
+  // 
+  // These were determined by looping through every `keyCode` and `charCode` that
+  // resulted from `keydown` and `keypress` events and counting what was printable.
+  printable : function(e) {
+    var code = e.which;
+    if (e.type == 'keydown') {
+      if (code == 32 ||                      // space
+          (code >= 48 && code <= 90) ||      // 0-1a-z
+          (code >= 96 && code <= 111) ||     // 0-9+-/*.
+          (code >= 186 && code <= 192) ||    // ;=,-./^
+          (code >= 219 && code <= 222)) {    // (\)'
+        return true;
+      }
+    } else {
+      // [space]!"#$%&'()*+,-.0-9:;<=>?@A-Z[\]^_`a-z{|} and unicode characters
+      if ((code >= 32 && code <= 126)  ||
+          (code >= 160 && code <= 500) ||
+          (String.fromCharCode(code) == ":")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+};
+
+})();
+(function() {
+
+var $ = jQuery; // Handle namespaced jQuery
+
+// Naive English transformations on words. Only used for a few transformations 
+// in VisualSearch.js.
+VS.utils.inflector = {
+
+  // Delegate to the ECMA5 String.prototype.trim function, if available.
+  trim : function(s) {
+    return s.trim ? s.trim() : s.replace(/^\s+|\s+$/g, '');
+  },
+  
+  // Escape strings that are going to be used in a regex. Escapes punctuation
+  // that would be incorrect in a regex.
+  escapeRegExp : function(s) {
+    return s.replace(/([.*+?^${}()|[\]\/\\])/g, '\\$1');
+  }
+};
+
+})();
+(function() {
+
+var $ = jQuery; // Handle namespaced jQuery
+
+$.fn.extend({
+
+  // Makes the selector enter a mode. Modes have both a 'mode' and a 'group',
+  // and are mutually exclusive with any other modes in the same group.
+  // Setting will update the view's modes hash, as well as set an HTML class
+  // of *[mode]_[group]* on the view's element. Convenient way to swap styles
+  // and behavior.
+  setMode : function(state, group) {
+    group    = group || 'mode';
+    var re   = new RegExp("\\w+_" + group + "(\\s|$)", 'g');
+    var mode = (state === null) ? "" : state + "_" + group;
+    this.each(function() {
+      this.className = (this.className.replace(re, '')+' '+mode)
+                       .replace(/\s\s/g, ' ');
+    });
+    return mode;
+  },
+
+  // When attached to an input element, this will cause the width of the input
+  // to match its contents. This calculates the width of the contents of the input
+  // by measuring a hidden shadow div that should match the styling of the input.
+  autoGrowInput: function() {
+    return this.each(function() {
+      var $input  = $(this);
+      var $tester = $('<div />').css({
+        opacity     : 0,
+        top         : -9999,
+        left        : -9999,
+        position    : 'absolute',
+        whiteSpace  : 'nowrap'
+      }).addClass('VS-input-width-tester').addClass('VS-interface');
+
+      // Watch for input value changes on all of these events. `resize`
+      // event is called explicitly when the input has been changed without
+      // a single keypress.
+      var events = 'keydown.autogrow keypress.autogrow ' +
+                   'resize.autogrow change.autogrow';
+      $input.next('.VS-input-width-tester').remove();
+      $input.after($tester);
+      $input.unbind(events).bind(events, function(e, realEvent) {
+        if (realEvent) e = realEvent;
+        var value = $input.val();
+
+        // Watching for the backspace key is tricky because it may not
+        // actually be deleting the character, but instead the key gets
+        // redirected to move the cursor from facet to facet.
+        if (VS.app.hotkeys.key(e) == 'backspace') {
+          var position = $input.getCursorPosition();
+          if (position > 0) value = value.slice(0, position-1) +
+                                    value.slice(position, value.length);
+        } else if (VS.app.hotkeys.printable(e) &&
+                   !VS.app.hotkeys.command) {
+          value += String.fromCharCode(e.which);
+        }
+        value = value.replace(/&/g, '&amp;')
+                     .replace(/\s/g,'&nbsp;')
+                     .replace(/</g, '&lt;')
+                     .replace(/>/g, '&gt;');
+
+        $tester.html(value);
+        $input.width($tester.width() + 3);
+        $input.trigger('updated.autogrow');
+      });
+
+      // Sets the width of the input on initialization.
+      $input.trigger('resize.autogrow');
+    });
+  },
+
+
+  // Cross-browser method used for calculating where the cursor is in an
+  // input field.
+  getCursorPosition: function() {
+    var position = 0;
+    var input    = this.get(0);
+
+    if (document.selection) { // IE
+      input.focus();
+      var sel    = document.selection.createRange();
+      var selLen = document.selection.createRange().text.length;
+      sel.moveStart('character', -input.value.length);
+      position   = sel.text.length - selLen;
+    } else if (input && $(input).is(':visible') &&
+               input.selectionStart != null) { // Firefox/Safari
+      position = input.selectionStart;
+    }
+
+    return position;
+  },
+
+  // A simple proxy for `selectRange` that sets the cursor position in an
+  // input field.
+  setCursorPosition: function(position) {
+    return this.each(function() {
+      return $(this).selectRange(position, position);
+    });
+  },
+
+  // Cross-browser way to select text in an input field.
+  selectRange: function(start, end) {
+    return this.each(function() {
+      if (this.setSelectionRange) { // FF/Webkit
+        this.focus();
+        this.setSelectionRange(start, end);
+      } else if (this.createTextRange) { // IE
+        var range = this.createTextRange();
+        range.collapse(true);
+        range.moveEnd('character', end);
+        range.moveStart('character', start);
+        if (end - start >= 0) range.select();
+      }
+    });
+  },
+
+  // Returns an object that contains the text selection range values for
+  // an input field.
+  getSelection: function() {
+    var input = this[0];
+
+    if (input.selectionStart != null) { // FF/Webkit
+      var start = input.selectionStart;
+      var end   = input.selectionEnd;
+      return {
+        start   : start,
+        end     : end,
+        length  : end-start,
+        text    : input.value.substr(start, end-start)
+      };
+    } else if (document.selection) { // IE
+      var range = document.selection.createRange();
+      if (range) {
+        var textRange = input.createTextRange();
+        var copyRange = textRange.duplicate();
+        textRange.moveToBookmark(range.getBookmark());
+        copyRange.setEndPoint('EndToStart', textRange);
+        var start = copyRange.text.length;
+        var end   = start + range.text.length;
+        return {
+          start   : start,
+          end     : end,
+          length  : end-start,
+          text    : range.text
+        };
+      }
+    }
+    return {start: 0, end: 0, length: 0};
+  }
+
+});
+
+// Debugging in Internet Explorer. This allows you to use 
+// `console.log(['message', var1, var2, ...])`. Just remove the `false` and
+// add your console.logs. This will automatically stringify objects using
+// `JSON.stringify', so you can read what's going out. Think of this as a
+// *Diet Firebug Lite Zero with Lemon*.
+if ($.browser.msie && false) {
+  window.console = {};
+  var _$ied;
+  window.console.log = function(msg) {
+    if (_.isArray(msg)) {
+      var message = msg[0];
+      var vars = _.map(msg.slice(1), function(arg) {
+        return JSON.stringify(arg);
+      }).join(' - ');
+    }
+    if(!_$ied){
+      _$ied = $('<div><ol></ol></div>').css({
+        'position': 'fixed',
+        'bottom': 10,
+        'left': 10,
+        'zIndex': 20000,
+        'width': $('body').width() - 80,
+        'border': '1px solid #000',
+        'padding': '10px',
+        'backgroundColor': '#fff',
+        'fontFamily': 'arial,helvetica,sans-serif',
+        'fontSize': '11px'
+      });
+      $('body').append(_$ied);
+    }
+    var $message = $('<li>'+message+' - '+vars+'</li>').css({
+      'borderBottom': '1px solid #999999'
+    });
+    _$ied.find('ol').append($message);
+    _.delay(function() {
+      $message.fadeOut(500);
+    }, 5000);
+  };
+
+}
+
+})();
+
+(function() {
+
+var $ = jQuery; // Handle namespaced jQuery
+
+// Used to extract keywords and facets from the free text search.
+VS.app.SearchParser = {
+
+  // Matches `category: "free text"`, with and without quotes.
+  ALL_FIELDS : /('.+?'|".+?"|[^'"\s]{2}\S*):\s*('.+?'|".+?"|[^'"\s]\S*)/g,
+
+  // Matches a single category without the text. Used to correctly extract facets.
+  CATEGORY   : /('.+?'|".+?"|[^'"\s]{2}\S*):\s*/,
+
+  // Called to parse a query into a collection of `SearchFacet` models.
+  parse : function(query) {
+    var searchFacets = this._extractAllFacets(query);
+    VS.app.searchQuery.refresh(searchFacets);
+    return searchFacets;
+  },
+
+  // Walks the query and extracts facets, categories, and free text.
+  _extractAllFacets : function(query) {
+    var facets = [];
+    var originalQuery = query;
+
+    while (query) {
+      var category, value;
+      originalQuery = query;
+      var field = this._extractNextField(query);
+      if (!field) {
+        category = 'text';
+        value    = this._extractSearchText(query);
+        query    = VS.utils.inflector.trim(query.replace(value, ''));
+      } else if (field.indexOf(':') != -1) {
+        category = field.match(this.CATEGORY)[1].replace(/(^['"]|['"]$)/g, '');
+        value    = field.replace(this.CATEGORY, '').replace(/(^['"]|['"]$)/g, '');
+        query    = VS.utils.inflector.trim(query.replace(field, ''));
+      } else if (field.indexOf(':') == -1) {
+        category = 'text';
+        value    = field;
+        query    = VS.utils.inflector.trim(query.replace(value, ''));
+      }
+
+      if (category && value) {
+          var searchFacet = new VS.model.SearchFacet({
+            category : category,
+            value    : VS.utils.inflector.trim(value)
+          });
+          facets.push(searchFacet);
+      }
+      if (originalQuery == query) break;
+    }
+
+    return facets;
+  },
+
+  // Extracts the first field found, capturing any free text that comes
+  // before the category.
+  _extractNextField : function(query) {
+    var textRe = /^\s*(\S+)\s+(?=\w+:\s?(('.+?'|".+?")|([^'"]{2}\S*)))/;
+    var textMatch = query.match(textRe);
+    if (textMatch && textMatch.length >= 1) {
+      return textMatch[1];
+    } else {
+      return this._extractFirstField(query);
+    }
+  },
+
+  // If there is no free text before the facet, extract the category and value.
+  _extractFirstField : function(query) {
+    var fields = query.match(this.ALL_FIELDS);
+    return fields && fields.length && fields[0];
+  },
+
+  // If the found match is not a category and facet, extract the trimmed free text.
+  _extractSearchText : function(query) {
+    query = query || '';
+    var text = VS.utils.inflector.trim(query.replace(this.ALL_FIELDS, ''));
+    return text;
+  }
+
+};
+
+})();
+(function() {
+
+var $ = jQuery; // Handle namespaced jQuery
+
+// The model that holds individual search facets and their categories.
+// Held in a collection by `VS.app.searchQuery`.
+VS.model.SearchFacet = Backbone.Model.extend({
+
+  // Extract the category and value and serialize it in preparation for
+  // turning the entire searchBox into a search query that can be sent
+  // to the server for parsing and searching.
+  serialize : function() {
+    var category = this.quoteCategory(this.get('category'));
+    var value    = VS.utils.inflector.trim(this.get('value'));
+
+    if (!value) return '';
+
+    if (!_.contains(VS.options.unquotable || [], category) && category != 'text') {
+      value = this.quoteValue(value);
+    }
+
+    if (category != 'text') {
+      category = category + ': ';
+    } else {
+      category = "";
+    }
+    return category + value;
+  },
+  
+  // Wrap categories that have spaces or any kind of quote with opposite matching
+  // quotes to preserve the complex category during serialization.
+  quoteCategory : function(category) {
+    var hasDoubleQuote = (/"/).test(category);
+    var hasSingleQuote = (/'/).test(category);
+    var hasSpace       = (/\s/).test(category);
+    
+    if (hasDoubleQuote && !hasSingleQuote) {
+      return "'" + category + "'";
+    } else if (hasSpace || (hasSingleQuote && !hasDoubleQuote)) {
+      return '"' + category + '"';
+    } else {
+      return category;
+    }
+  },
+  
+  // Wrap values that have quotes in opposite matching quotes. If a value has
+  // both single and double quotes, just use the double quotes.
+  quoteValue : function(value) {
+    var hasDoubleQuote = (/"/).test(value);
+    var hasSingleQuote = (/'/).test(value);
+    
+    if (hasDoubleQuote && !hasSingleQuote) {
+      return "'" + value + "'";
+    } else {
+      return '"' + value + '"';
+    }
+  }
+
+});
+
+})();
+(function() {
+
+var $ = jQuery; // Handle namespaced jQuery
+
+// Collection which holds all of the individual facets (category: value).
+// Used for finding and removing specific facets.
+VS.model.SearchQuery = Backbone.Collection.extend({
+
+  // Model holds the category and value of the facet.
+  model : VS.model.SearchFacet,
+
+  // Turns all of the facets into a single serialized string.
+  value : function() {
+    return this.map(function(facet){ return facet.serialize(); }).join(' ');
+  },
+
+  // Find a facet by its category. Multiple facets with the same category
+  // is fine, but only the first is returned.
+  find : function(category) {
+    var facet = this.detect(function(facet) {
+      return facet.get('category') == category;
+    });
+    return facet && facet.get('value');
+  },
+
+  // Counts the number of times a specific category is in the search query.
+  count : function(category) {
+    return this.select(function(facet) {
+      return facet.get('category') == category;
+    }).length;
+  },
+
+  // Returns an array of extracted values from each facet in a category.
+  values : function(category) {
+    var facets = this.select(function(facet) {
+      return facet.get('category') == category;
+    });
+    return _.map(facets, function(facet) { return facet.get('value'); });
+  },
+
+  // Checks all facets for matches of either a category or both category and value.
+  has : function(category, value) {
+    return this.any(function(facet) {
+      var categoryMatched = facet.get('category') == category;
+      if (!value) return categoryMatched;
+      return categoryMatched && facet.get('value') == value;
+    });
+  },
+
+  // Used to temporarily hide a specific category and serialize the search query.
+  withoutCategory : function(category) {
+    return this.map(function(facet) {
+      if (facet.get('category') != category) return facet.serialize();
+    }).join(' ');
+  }
+
+});
+
+})();(function(){
+window.JST = window.JST || {};
+
+window.JST['search_box'] = _.template('<div class="VS-search">\n  <div class="VS-search-box-wrapper VS-search-box">\n    <div class="VS-icon VS-icon-search"></div>\n    <div class="VS-search-inner"></div>\n    <div class="VS-icon VS-icon-cancel VS-cancel-search-box" title="clear search"></div>\n  </div>\n</div>');
+window.JST['search_facet'] = _.template('<% if (model.has(\'category\')) { %>\n  <div class="category"><%= model.get(\'category\') %>:</div>\n<% } %>\n\n<div class="search_facet_input_container">\n  <input type="text" class="search_facet_input VS-interface" value="" />\n</div>\n\n<div class="search_facet_remove VS-icon VS-icon-cancel"></div>');
+window.JST['search_input'] = _.template('<input type="text" />');
+})();

@@ -14,6 +14,6 @@ urlpatterns = patterns('',
     url(r'^inbox/(?P<action>\w+)/', 'courses.views.inbox', name='search_json'),
     
     url(r'^api/register/', 'api.views.register', name='api_register'),
-    (r'^api/', include('api.proxy_urls')),
+    #(r'^api/', include('api.proxy_urls')),
     (r'^(?P<session_slug>[-\w]+)/', include('networks.urls')),
 )
