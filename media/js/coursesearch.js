@@ -36,8 +36,6 @@
 
     OCS.app.controller = new OCS.controller;
     Backbone.history.start();
-    //new Workspace();
-    
     
     $(window).trigger('hashchange');
     
@@ -49,9 +47,8 @@
 OCS.utils.init_vs = function() {
   VS.init({
     container : $('.visual_search'),
-    autocompleteTutor : true,
     query     : '',
-    facetTutor : true,
+    facetTutor : false,
     callbacks : {
       search : function(query) {
         OCS.utils.search(query);
@@ -113,22 +110,49 @@ OCS.utils.load_session_data = function() {
 
 // Performs a query
 OCS.utils.search = function(query, page) {
+  query = query || '';
+  page = page || 1;
   data = {
     network : OCS.options.network,
     session : OCS.options.session,
     query   : query,
+    page    : page,
   };
-  OCS.app.controller.saveLocation("search/" + encodeURIComponent(query));
+  OCS.app.controller.saveLocation("/search/" + encodeURIComponent(query) + "/p" + page);
   $.ajax(OCS.utils.get_api_url('course'), {
     dataType : "jsonp",
     data     : data,
     success  : function(response) {
       var results = new OCS.model.Results(response.results);
-      var resultsView = new OCS.view.Results({
+      var resultsSummary = new OCS.model.SearchResultSummary({
+        offset : response.offset,
+        page   : response.page,
+        total  : response.total,
+        num    : response.num,
+        more   : response.more,
+        results_per_page : response.results_per_page
+      });
+      if (OCS.app.resultsView == undefined) {
+        OCS.app.resultsView = new OCS.view.Results({
+          collection : results,
+          summary : resultsSummary,
+          el : $('#results')
+        });
+        OCS.app.resultsView.render();
+      }
+      else {
+        OCS.app.resultsView.collection = results;
+        OCS.app.resultsView.summary = resultsSummary;
+        OCS.app.resultsView.render();
+      }
+      /*
+      OCS.app.resultsView = new OCS.view.Results({
         collection: results,
+        summary: resultsSummary,
         el: $('#results')
       });
-      resultsView.render();
+      OCS.app.resultsView.render();
+      */
     }
   });
 };
@@ -146,12 +170,15 @@ OCS.utils.add_facet = function(options) {
     if (!OCS.config.facets) OCS.config.facets = {};
     if (!OCS.config.facets[options.category]) OCS.config.facets[options.category] = [];
     
-    _.each(options.choices, function(choice) {
-      OCS.config.facets[options.category].push({
-        value : choice.name,
-        lavel : choice.name
-      });
+    // Remove choices that have identical names (Some schools have both undergrad and
+    // graduate version of a subject with the same name).
+    var choices = _.map(options.choices, function(choice) {
+      return choice.name;
     });
+    var uniq_choices = _.map(_.uniq(choices), function(choice) {
+      return {value: choice, label: choice} 
+    });
+    OCS.config.facets[options.category] = uniq_choices;
   }
 };
 
@@ -179,10 +206,12 @@ OCS.utils.titleize = function(str) {
 OCS.model.SearchResult = Backbone.Model.extend({
   initialize : function() {
     //
-  },
-  render : function() {
-    alert('rendering');
-    $(this.el).html(JST['search_result']( this.model.toJSON() ));
+  }
+});
+
+OCS.model.SearchResultSummary = Backbone.Model.extend({
+  initialize : function() {
+    //
   }
 });
 
@@ -192,10 +221,10 @@ OCS.model.Results = Backbone.Collection.extend({
 
 OCS.controller = Backbone.Controller.extend({
   routes : {
-    "":                      "search", // #search
-    "search/":               "search", // #search
-    "search/:query":         "search", // #search/biology
-    "search/:query/p:page":  "search", // #search/biology/p4
+    "":                      "search", // #/search
+    "/search/":               "search", // #/search
+    "/search/:query":         "search", // #/search/biology
+    "/search/:query/p:page":  "search", // #/search/biology/p4
   },
   
   search: function(query, page) {
@@ -236,6 +265,32 @@ OCS.view.Results = Backbone.View.extend({
     var that = this;
     this._resultViews = [];
     
+    this.summary = this.options.summary;
+    this.render();
+    this.collection.bind("refresh", function() {that.render()});
+    _.bindAll(this, "render");
+  },
+  
+  events : {
+    "click .more-results": "nextPage",
+  },
+  
+  render : function() {
+    this.updateViews();
+    var that = this;
+    $(this.el).empty();
+    $(that.el).append(JST['results_summary'](this.summary.toJSON() ));
+    _(this._resultViews).each(function(dv) {
+      $(that.el).append(dv.render().el);
+    });
+    if (that.summary.attributes.more) {
+      $(that.el).append(JST['more_results'](this.summary.toJSON() ));
+    }
+  },
+  
+  updateViews: function() {
+    that = this;
+    that._resultViews = [];
     this.collection.each(function(result) {
       that._resultViews.push(new OCS.view.Result({
         model : result,
@@ -244,21 +299,13 @@ OCS.view.Results = Backbone.View.extend({
     });
   },
   
-  render : function() {
-    var that = this;
-    $(this.el).empty();
-    _(this._resultViews).each(function(dv) {
-      $(that.el).append(dv.render().el);
-    });
-  },
-  
-  add: function(result) {
-    var result_view = new OCS.view.SearchResult({
-      model: result
-    });
+  nextPage : function() {
+    //OCS.app.resultsView.collection.remove();
+    OCS.app.resultsView.el.empty();
     
-    this._result_views[result.get('id')] = result_view;
-    result_view.render();
+    console.log('next page clicked');
+    var page = OCS.app.resultsView.summary.attributes.page + 1;
+    OCS.utils.search(VS.app.searchBox.getQuery(), page);
   }
 });
 
@@ -266,73 +313,80 @@ OCS.view.Results = Backbone.View.extend({
 
 window.JST = window.JST || {};
 
+window.JST['results_summary'] = _.template('<div class="results_summary">\
+  <% if (offset + num <= total) { %>\
+  <span class="page">Showing <%= offset + 1 %> - <%= offset + num %> of <%= total %> results</span>\
+  <% } else { %>\
+  <span class="page">Showing all <%= num %> results</span>\
+  <% } %>\
+</div>');
+window.JST['more_results'] = _.template('<div class="more-results">More</div>');
+
 window.JST['search_result'] = _.template('<div class="result clearfix result-<%= id %>">\
-        <div class="top clearfix">\
-          <div class="names">\
-            <p class="course_name"><%= name %></p>\
-            <% if (classification.college) { %>\
-              <p class="college_name"><%= classification.college.name %></p>\
-            <% } %>\
-            <p class="classification_name"><%= classification.name %></p>\
+  <div class="top clearfix">\
+    <div class="names">\
+      <p class="course_name"><%= name %></p>\
+      <% if (classification.college) { %>\
+        <p class="college_name"><%= classification.college.name %></p>\
+      <% } %>\
+      <p class="classification_name"><%= classification.name %></p>\
+    </div>\
+    <div class="meta">\
+      <p class="classfication_code"><%= classification.code %>-<%= number %></p>\
+      <p class="level_name"><%= level %></p>\
+      <p class="grading"><%= grading %></p>\
+    </div>\
+  </div>\
+  <div class="extra inactive">\
+    <% if(description) { %>\
+      <div class="description">\
+        <%= description %>\
+      </div>\
+    <% } %>\
+    <div class="sections">\
+      <div class="section column_heads">\
+        <span class="number">class #</span>\
+        <span class="meets"><span class="meet">\
+          <span class="day">days</span>\
+          <span class="time">times</span>\
+          <span class="location">location</span>\
+        </span></span>\
+        <span class="prof">professor</span>\
+        <span class="units">credits</span>\
+        <span class="status">status</span>\
+        <span class="name">name</span>\
+        <span class="percentage"></span>\
+      </div>\
+    <% for (var section_index = 0; section_index < sections.length; section_index++){ %>\
+      <% var sec = sections[section_index]; %>\
+      <div class="section <%= ["even", "odd"][section_index % 2] %> status-<%= sec.status.label.replace(/[^-a-zA-Z0-9,&\s]+/ig, "").replace(/\\s/gi, "-").toLowerCase() %> clearfix">\
+        <span class="number"><%= sec.number %></span>\
+        <span class="meets">\
+        <% for (var meeting_index = 0; meeting_index < sec.meets.length; meeting_index++){ %>\
+          <% var meet = sec.meets[meeting_index]; %>\
+          <div class="meet">\
+            <span class="day"><%= meet.day %>&nbsp;</span>\
+            <span class="time"><% if (meet.start && meet.end){ %><%= meet.start %> - <%= meet.end %><% } %>&nbsp;</span>\
+            <span class="location"><% if (meet.location && meet.room){ %><%= meet.location %> <%= meet.room %><% } %>&nbsp;</span>\
           </div>\
-          <div class="meta">\
-            <p class="classfication_code"><%= classification.code %>-<%= number %></p>\
-            <p class="level_name"><%= level %></p>\
-            <p class="grading"><%= grading %></p>\
-          </div>\
-        </div>\
-        <div class="extra inactive">\
-          <% if(description) { %>\
-            <div class="description">\
-              <%= description %>\
-            </div>\
-          <% } %>\
-          <div class="sections">\
-            <div class="section column_heads">\
-              <span class="number">class #</span>\
-              <span class="meets"><span class="meet">\
-                <span class="day">days</span>\
-                <span class="time">times</span>\
-                <span class="location">location</span>\
-              </span></span>\
-              <span class="prof">professor</span>\
-              <span class="units">credits</span>\
-              <span class="status">status</span>\
-              <span class="name">name</span>\
-              <span class="percentage"></span>\
-            </div>\
-          <% for (var section_index = 0; section_index < sections.length; section_index++){ %>\
-            <% var sec = sections[section_index]; %>\
-            <div class="section <%= ["even", "odd"][section_index % 2] %> status-<%= sec.status.label.replace(/[^-a-zA-Z0-9,&\s]+/ig, "").replace(/\\s/gi, "-").toLowerCase() %> clearfix">\
-              <span class="number"><%= sec.number %></span>\
-              <span class="meets">\
-              <% for (var meeting_index = 0; meeting_index < sec.meets.length; meeting_index++){ %>\
-                <% var meet = sec.meets[meeting_index]; %>\
-                <div class="meet">\
-                  <span class="day"><%= meet.day %>&nbsp;</span>\
-                  <span class="time"><% if (meet.start && meet.end){ %><%= meet.start %> - <%= meet.end %><% } %>&nbsp;</span>\
-                  <span class="location"><% if (meet.location && meet.room){ %><%= meet.location %> <%= meet.room %><% } %>&nbsp;</span>\
-                </div>\
-              <% } %>\
-              </span>\
-              <span class="prof"><%= sec.prof %>&nbsp;</span>\
-              <span class="units"><%= sec.units %> unit<%= sec.units == "1" ? "" : "s" %>&nbsp;</span>\
-              <span class="status"><%= sec.status.label %></span>\
-              <span class="name"><%= sec.name %></span>\
-              <% if (sec.status.seats) { %>\
-                <span class="percentage"><%= sec.status.seats.taken %>\
-                <% if (sec.status.seats.total) { %> / <%= sec.status.seats.total %><% } %>\
-                 seats taken</span>\
-              <% } %>\
-              <% if (sec.status.label == "Wait List" && sec.status.waitlist) { %>\
-                <span class="percentage"><%= sec.status.waitlist.taken %> on waitlist</span>\
-              <% } %>\
-              <div class="notes"><%= sec.notes %></div>\
-            </div>\
-            <% if (sec.notes) { %>\
-            <% } %>\
-          <% } %>\
-          </div>\
-        </div>\
-      </div>');
+        <% } %>\
+        </span>\
+        <span class="prof"><%= sec.prof %>&nbsp;</span>\
+        <span class="units"><%= sec.units %> unit<%= sec.units == "1" ? "" : "s" %>&nbsp;</span>\
+        <span class="status"><%= sec.status.label %></span>\
+        <span class="name"><%= sec.name %></span>\
+        <% if (sec.status.seats) { %>\
+          <span class="percentage"><%= sec.status.seats.taken %>\
+          <% if (sec.status.seats.total) { %> / <%= sec.status.seats.total %><% } %>\
+           seats taken</span>\
+        <% } %>\
+        <% if (sec.status.label == "Wait List" && sec.status.waitlist) { %>\
+          <span class="percentage"><%= sec.status.waitlist.taken %> on waitlist</span>\
+        <% } %>\
+        <div class="notes"><%= sec.notes %></div>\
+      </div>\
+    <% } %>\
+    </div>\
+  </div>\
+</div>');
 
