@@ -5,13 +5,6 @@ from django.template import RequestContext
 
 import redis, base64
 
-from api import helpers
-
-def create(request):
-  response = helpers.create_subject(request.POST)
-  
-  return HttpResponse(response)
-
 def register(request):
     return render_to_response('api/register.html', {},
                               context_instance=RequestContext(request))
@@ -29,4 +22,3 @@ def register_submit(request):
       status = 'success'
     return render_to_response('api/register.html', {'msg': msg, 'status': status},
                               context_instance=RequestContext(request))
-

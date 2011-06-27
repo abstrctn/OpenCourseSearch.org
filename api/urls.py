@@ -9,7 +9,7 @@ urlpatterns = patterns('',
   #url(r'^v0.1/network$', 'api.v01_views.network', name='api_course'),
   #url(r'^v0.1/session$', 'api.v01_views.session', name='api_course'),
   
-  (r'^v0.1/', include('api.v01.urls')),
+  #(r'^v0.1/', include('api.v01.urls')),
 
   url(r'^(?P<session_slug>[-\w]+)/(?P<slugs>.+)', 'networks.views.course', name='course_detail'),
 )
