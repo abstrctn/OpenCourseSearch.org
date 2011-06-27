@@ -95,9 +95,9 @@ body {
 #results .result .top:hover, #results .result.expanded .top {
   cursor: pointer;
   background-color: #d6dde9;
-  background-image: -moz-linear-gradient(top, #d6dde9, #d3d5e3); /* FF3.6 */
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#d6dde9), to(#d3d5e3)); /* Saf4+, Chrome */
-  background-image: linear-gradient(top, #d6dde9, #d3d5e3);
+  background-image: -moz-linear-gradient(top, #d6dde9, #cdd9f2); /* FF3.6 */
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#d6dde9), to(#cdd9f2)); /* Saf4+, Chrome */
+  background-image: linear-gradient(top, #d6dde9, #cdd9f2);
 }
 #results .result .top .names {float: left;}
 #results .result .top .names .course_name, #results .result .top .names .course_name a {font-weight: bold; font-size: 14px; color: #243759; text-decoration: none;}
@@ -159,16 +159,15 @@ body {
 #results .result .extra .sections .section span {float: left; margin-right: 15px;}
 #results .result .extra .sections .section span.number {width: 40px;}
 #results .result .extra .sections .section span.status {width: 70px;}
-#results .result .extra .sections .section span.meets {width: 330px; min-width: 220px; min-height: 10px;}
-#results .result .extra .sections .section span.meets .meet {}
-#results .result .extra .sections .section span.meets .meet .day {width: 60px;}
-#results .result .extra .sections .section span.meets .meet .time {width: 130px;}
-#results .result .extra .sections .section span.meets .meet .location {width: 80px;}
+#results .result .extra .sections .section .day {width: 60px;}
+#results .result .extra .sections .section .time {width: 130px;}
+#results .result .extra .sections .section .location {width: 80px;}
 /*#results .result .extra .sections .section span.days {width: 120px;}
 #results .result .extra .sections .section span.times {width: 130px;}*/
 #results .result .extra .sections .section span.prof {width: 150px;}
 #results .result .extra .sections .section span.units {width: 60px;}
 #results .result .extra .sections .section span.name {width: 100px;}
+#results .result .extra .sections .section span.component {width: 70px;}
 #results .result .extra .sections .section span.percentage {width: 150px;}
 #results .result .extra .sections .section .notes {color: #888; clear: both; padding: 4px 0px;}
 #results .result .extra .sections .section:hover .notes {color: #444;}
@@ -259,8 +258,11 @@ ul.filters li span.remove {
   height: 20px;
   font-size: 18px;
   text-align: center;
-  border: 1px solid #aaa;
-  background: #eee;
+  border: 1px solid #ccc;
+  background-color: #F8F8F8;
+  background-image: -moz-linear-gradient(top, #F8F8F8, #F3F3F3); /* FF3.6 */
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#F8F8F8), to(#F3F3F3)); /* Saf4+, Chrome */
+  background-image: linear-gradient(top, #F8F8F8, #F3F3F3);
 }
 .more-results:hover {
   background: #ddd;
@@ -744,6 +746,9 @@ h2 .crumbs {
   padding-right: 20px;
   margin-right: 20px;
   border-right: 1px solid #ccc;
+}
+.index .list .two img {
+  margin-left: -5px;
 }
 .index .list .three {
   width: 250px;

@@ -118,7 +118,10 @@ OCS.utils.search = function(query, page) {
     query   : query,
     page    : page,
   };
-  OCS.app.controller.saveLocation("/search/" + encodeURIComponent(query) + "/p" + page);
+  if (page > 1)
+    OCS.app.controller.saveLocation("/search/" + encodeURIComponent(query) + "/p" + page);
+  else
+    OCS.app.controller.saveLocation("/search/" + encodeURIComponent(query));
   $.ajax(OCS.utils.get_api_url('course'), {
     dataType : "jsonp",
     data     : data,
@@ -345,45 +348,49 @@ window.JST['search_result'] = _.template('<div class="result clearfix result-<%=
     <% } %>\
     <div class="sections">\
       <div class="section column_heads">\
-        <span class="number">class #</span>\
-        <span class="meets"><span class="meet">\
-          <span class="day">days</span>\
-          <span class="time">times</span>\
-          <span class="location">location</span>\
-        </span></span>\
-        <span class="prof">professor</span>\
-        <span class="units">credits</span>\
-        <span class="status">status</span>\
-        <span class="name">name</span>\
+        <% if (available_stats["number"]) { %><span class="number">class #</span><% } %>\
+        <span class="meets">\
+          <% if (available_stats["meets.day"]) { %><span class="day">days</span><% } %>\
+          <% if (available_stats["meets.start"]) { %><span class="time">times</span><% } %>\
+          <% if (available_stats["meets.location"]) { %><span class="location">location</span><% } %>\
+        </span>\
+        <% if (available_stats["prof"]) { %><span class="prof">professor</span><% } %>\
+        <% if (available_stats["units"]) { %><span class="units">credits</span><% } %>\
+        <% if (available_stats["component"]) { %><span class="component">component</span><% } %>\
+        <% if (available_stats["status.label"]) { %><span class="status">status</span><% } %>\
+        <% if (available_stats["status.seats"]) { %><span class="seats">seats</span><% } %>\
+        <% if (available_stats["status.waitlist"]) { %><span class="waitlist">waitlist</span><% } %>\
+        <% if (available_stats["name"]) { %><span class="name">name</span><% } %>\
         <span class="percentage"></span>\
       </div>\
     <% for (var section_index = 0; section_index < sections.length; section_index++){ %>\
       <% var sec = sections[section_index]; %>\
       <div class="section <%= ["even", "odd"][section_index % 2] %> status-<%= sec.status.label.replace(/[^-a-zA-Z0-9,&\s]+/ig, "").replace(/\\s/gi, "-").toLowerCase() %> clearfix">\
-        <span class="number"><%= sec.number %></span>\
+        <% if (available_stats["number"]) { %><span class="number"><%= sec.number %></span><% } %>\
         <span class="meets">\
         <% for (var meeting_index = 0; meeting_index < sec.meets.length; meeting_index++){ %>\
           <% var meet = sec.meets[meeting_index]; %>\
-          <div class="meet">\
-            <span class="day"><%= meet.day %>&nbsp;</span>\
-            <span class="time"><% if (meet.start && meet.end){ %><%= meet.start %> - <%= meet.end %><% } %>&nbsp;</span>\
-            <span class="location"><% if (meet.location && meet.room){ %><%= meet.location %> <%= meet.room %><% } %>&nbsp;</span>\
-          </div>\
+          <span class="day"><%= meet.day %></span>\
+          <span class="time"><% if (meet.start && meet.end){ %><%= meet.start %> - <%= meet.end %><% } %></span>\
+          <% if (available_stats["meets.location"] || available_stats["meets.room"]) { %><span class="location"><%= meet.location %> <%= meet.room %></span><% } %>\
         <% } %>\
         </span>\
-        <span class="prof"><%= sec.prof %>&nbsp;</span>\
-        <span class="units"><%= sec.units %> unit<%= sec.units == "1" ? "" : "s" %>&nbsp;</span>\
-        <span class="status"><%= sec.status.label %></span>\
-        <span class="name"><%= sec.name %></span>\
-        <% if (sec.status.seats) { %>\
-          <span class="percentage"><%= sec.status.seats.taken %>\
-          <% if (sec.status.seats.total) { %> / <%= sec.status.seats.total %><% } %>\
-           seats taken</span>\
-        <% } %>\
-        <% if (sec.status.label == "Wait List" && sec.status.waitlist) { %>\
-          <span class="percentage"><%= sec.status.waitlist.taken %> on waitlist</span>\
-        <% } %>\
-        <div class="notes"><%= sec.notes %></div>\
+        <% if (available_stats["prof"]) { %><span class="prof"><%= sec.prof %></span><% } %>\
+        <% if (available_stats["units"]) { %><span class="units"><%= sec.units %> unit<%= sec.units == "1" ? "" : "s" %></span><% } %>\
+        <% if (available_stats["component"]) { %><span class="component"><%= sec.component %></span><% } %>\
+        <% if (available_stats["status.label"]) { %><span class="status"><%= sec.status.label %></span><% } %>\
+        <% if (available_stats["name"]) { %><span class="name"><%= sec.name %></span><% } %>\
+        \
+        <% if (available_stats["status.seats"]) { %><span class="seats">\
+          <%= sec.status.seats.taken %>\
+          <% if (sec.status.seats.total) { %> / <%= sec.status.seats.total %> seats taken<% } %>\
+        </span><% } %>\
+        \
+        <% if (available_stats["status.waitlist"]) { %><span class="waitlist">\
+          <%= sec.status.waitlist.taken %> on waitlist\
+        </span><% } %>\
+        \
+        <% if (available_stats["notes"]) { %><div class="notes"><%= sec.notes %></div><% } %>\
       </div>\
     <% } %>\
     </div>\
