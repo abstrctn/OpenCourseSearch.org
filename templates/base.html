@@ -12,10 +12,10 @@
   <title>{% block title %}OpenCourseSearch.org{% endblock %}</title>
 
   {% if NETWORK.slug and NETWORK.slug != 'home' %}
-    <link rel="image_src" href="http://opencoursesearch.org.s3.amazonaws.com/logos/{{ NETWORK.slug }}.png" />
+    <link rel="image_src" href="{{ MEDIA_URL }}logos/{{ NETWORK.slug }}.png" />
     <meta name="title" content="{{ NETWORK.slug|upper }}.OpenCourseSearch.org" />
   {% else %}
-    <link rel="image_src" href="http://opencoursesearch.org.s3.amazonaws.com/img/mainlogo.png" />
+    <link rel="image_src" href="{{ MEDIA_URL }}img/mainlogo.png" />
     <meta name="title" content="OpenCourseSearch.org" />
   {% endif %}
 
@@ -47,28 +47,31 @@
 
 <body>
   <div class="header clearfix">
-    <div class="social" style="margin-left: -40px;">
-      <a style="float: right;" href="http://twitter.com/share" class="twitter-share-button" data-text="A more sensible search option for university course listings" data-url="http://opencoursesearch.org" data-count="horizontal">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
-      <iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fopencoursesearch.org%2F&amp;send=true&amp;layout=button_count&amp;width=150&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:97px; height:21px; float: right;" allowTransparency="true"></iframe>
+    <div class="container clearfix">
+      <div class="social" style="margin-left: -40px;">
+        <a style="float: right;" href="http://twitter.com/share" class="twitter-share-button" data-text="A more sensible search option for university course listings" data-url="http://opencoursesearch.org" data-count="horizontal">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+        <iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fopencoursesearch.org%2F&amp;send=true&amp;layout=button_count&amp;width=150&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:97px; height:21px; float: right;" allowTransparency="true"></iframe>
+      </div>
+      <a href="/" class="logo logo-{{ NETWORK.slug }}"></a>
+      <ul class="nav">
+        <li><a href="http://opencoursesearch.org/">Home</a></li>
+        {% if NETWORK.slug != 'home' %}<li><a href="/">Search</a></li>{% endif %}
+        <li><a href="http://opencoursesearch.org/about/">About</a></li>
+        <li><a href="https://github.com/abstrctn/OpenCourseSearch.org">Code</a></li>
+        <li><a href="http://opencoursesearch.org/comments/">Comments/Bugs</a></li>
+        <li><a href="http://opencoursesearch.org/api/">API</a></li>
+      </ul>
+      
     </div>
-    <a href="/" class="logo logo-{{ NETWORK.slug }}"></a>
-    <ul class="nav">
-      <li><a href="http://opencoursesearch.org/">Home</a></li>
-      {% if NETWORK.slug != 'home' %}<li><a href="/">Search</a></li>{% endif %}
-      <li><a href="http://opencoursesearch.org/about/">About</a></li>
-      <li><a href="https://github.com/abstrctn/OpenCourseSearch.org">Code</a></li>
-      <li><a href="http://opencoursesearch.org/comments/">Comments/Bugs</a></li>
-      <li><a href="http://opencoursesearch.org/api/">API</a></li>
-    </ul>
-    
-  </div>
-  <div class="clearfix" style="width: 960px; margin: 0 auto;">
-    <div class="search-counts">
-      <span>Searching {{ total_courses|intcomma }} courses, {{ total_sections|intcomma }} sections.</span>
+    <div class="clearfix" style="width: 960px; margin: 0 auto;">
+      <div class="search-counts">
+        <span>Searching {{ total_courses|intcomma }} courses, {{ total_sections|intcomma }} sections.</span>
+      </div>
+      <span class="tagline">A more sensible search solution for {% firstof INSTITUTION "your school" %}.</span>
+      <span class="page-loading">Loading...</span>
     </div>
-    <span class="tagline">A more sensible search solution for {% firstof INSTITUTION "your school" %}.</span>
-    <span class="page-loading">Loading...</span>
   </div>
+
     
   {% block content %}
   {% endblock content %}

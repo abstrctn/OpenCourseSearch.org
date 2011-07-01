@@ -7,10 +7,15 @@ body {
   font-family: Lucida Grande, sans-serif;
 }
 
-.header {
+.container {
   width: 960px;
   margin: 0 auto;
-  padding: 10px 0 0 0;
+}
+
+.header {
+  padding: 10px 0;
+  background: #f3f3f3;
+  border-bottom: 1px solid #e7e7e7;
 }
 .header .logo {
   float: left;
@@ -67,7 +72,14 @@ body {
 .results_summary {
   font-size: 16px;
   text-align: center;
-  margin-bottom: 7px;
+  margin-bottom: 13px;
+  color: #0c6826;
+  font-weight: bold;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+#search {
+  padding: 8px;
 }
 
 #results {
@@ -81,26 +93,26 @@ body {
   position: relative;
   z-index: 10;
   width: 100%;
-  margin: 0 0 -1px 0;
+  margin: 0 0 0px 0;
+  border-top: 1px solid #e5e5e5;
 }
 #results .result .top {
   position: relative;
   z-index: 10;
-  border: 1px solid #ccc;
   padding: 8px;
   height: 44px;
+  margin-left: -1px;
   /*border-radius: 15px;*/
-  background-color: #F8F8F8;
-  background-image: -moz-linear-gradient(top, #F8F8F8, #F3F3F3); /* FF3.6 */
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#F8F8F8), to(#F3F3F3)); /* Saf4+, Chrome */
-  background-image: linear-gradient(top, #F8F8F8, #F3F3F3);
 }
+#results .result .top.status-open {border-left: 2px solid #259c09;}
+#results .result .top.status-waitlist {border-left: 2px solid #a1a1a1;}
+#results .result .top.status-closed {border-left: 2px solid #b81e1e;}
 #results .result .top:hover, #results .result.expanded .top {
   cursor: pointer;
-  background-color: #d6dde9;
-  background-image: -moz-linear-gradient(top, #d6dde9, #cdd9f2); /* FF3.6 */
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#d6dde9), to(#cdd9f2)); /* Saf4+, Chrome */
-  background-image: linear-gradient(top, #d6dde9, #cdd9f2);
+  background-color: #f5f5f5;
+  border-top: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
+  margin: -1px 0 -1px -1px;
 }
 #results .result .top .names {float: left;}
 #results .result .top .names .course_name, #results .result .top .names .course_name a {font-weight: bold; font-size: 14px; color: #243759; text-decoration: none;}
@@ -258,12 +270,12 @@ ul.filters li span.remove {
 
 .more-results {
   color: #333;
-  padding: 8px;
+  padding: 17px 9px;
   width: 942px;
   height: 20px;
   font-size: 18px;
   text-align: center;
-  border: 1px solid #ccc;
+  border-top: 1px solid #ccc;
   background-color: #F8F8F8;
   background-image: -moz-linear-gradient(top, #F8F8F8, #F3F3F3); /* FF3.6 */
   background-image: -webkit-gradient(linear, left top, left bottom, from(#F8F8F8), to(#F3F3F3)); /* Saf4+, Chrome */
@@ -327,7 +339,7 @@ ul.nav li a:hover {
   color: #333;
 }
 .social {
-  margin: 4px -10px 0 0;
+  margin: 4px -14px 0 0;
   float: right;
   text-align: right;
 }
@@ -380,98 +392,6 @@ ul.session-switcher li.option:hover {
 ul.session-switcher li a {
   text-decoration: none;
   color: #333;
-}
-
-#inbox {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  height: 1px;
-  left: 0;
-}
-#inbox .outer {
-  width: 615px;
-  height: 1px;
-  margin: 0 auto;
-  position: relative;
-}
-#inbox .container {
-  position: absolute;
-  width: 615px;
-  bottom: 0;
-  background: #eee;
-  border: 2px solid #555;
-  padding: 4px;
-}
-#inbox .container.hide {
-  height: 18px;
-  background: #888;
-}
-#inbox .container .handle {
-  background: #888;
-  height: 18px;
-  padding: 3px 0;
-  width: 100%;
-  color: #eee;
-  font-size: 13px;
-}
-#inbox .container .handle:hover {
-  background: #666;
-  cursor: pointer;
-}
-#inbox .container .handle span {
-  padding: 0 5px;
-  float: left;
-}
-#inbox .container .handle span.undo {
-  float: right;
-}
-#inbox .container ul {
-  list-style: none;
-}
-#inbox .container ul li {
-  border-bottom: 1px solid #aaa;
-  padding: 4px;
-}
-#inbox .container ul li:hover {
-  background: #ccc;
-}
-#inbox .container ul li.warning {
-  background: #d48f8f;
-}
-#inbox .container ul li span {
-  float: left;
-  font-size: 12px;
-}
-#inbox .container ul li .classification {
-  color: #444;
-  width: 160px;
-  margin-right: 5px;
-}
-#inbox .container ul li .number {
-  color: #444;
-  width: 50px;
-  margin-right: 5px;
-}
-#inbox .container ul li .name {
-  font-size: 13px;
-  font-weight: bold;
-  color: #222;
-  width: 260px;
-  margin-right: 5px;
-}
-#inbox .container ul li .name:hover {
-  cursor: pointer;
-}
-#inbox .container ul li .section {
-  width: 100px;
-  margin-right: 5px;
-}
-#inbox .container ul li .remove {
-  color: #333;
-  width: 15px;
-  cursor: pointer;
 }
 
 .stats .boxes {
@@ -638,9 +558,13 @@ h2 .crumbs {
 
 /* course detail */
 #content {
+  background: #fff;
   width: 960px;
   margin: 0 auto;
-  padding: 10px 0 30px 0;
+  padding: 10px 0px 0px 0px;
+  border-left: 1px solid #e0e0e0;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
 }
 .course_detail {
   font-family: Georgia;
@@ -696,12 +620,15 @@ h2 .crumbs {
 
 /* index */
 
+.shadowed {box-shadow: 0 2px 12px rgba(0,0,0,0.35); -moz-box-shadow: 0 2px 12px rgba(0,0,0,0.35); -webkit-box-shadow: 0 2px 12px rgba(0,0,0,0.35);}
+
 .index {
   clear: both;
   margin: 25px auto auto !important;
   padding-top: 20px;
   padding-bottom: 50px;
-  border-top: 1px dashed #777;
+  padding-right: 15px;
+  padding-left: 15px;
 }
 .index .bang {
   margin: 40px auto 60px auto;
@@ -721,9 +648,14 @@ h2 .crumbs {
 .index .list p {
   margin: 15px 0 15px 0;
   font-size: 14px;
+  line-height: 20px;
 }
 .index .list p a {
   color: #23355c;
+}
+.index .list .special {
+  color: #bd1818;
+  font-weight: bold;
 }
 .index .list .title {
   margin-bottom: 40px;
@@ -744,13 +676,13 @@ h2 .crumbs {
   width: 260px;
   padding-right: 20px;
   margin-right: 20px;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid #ddd;
 }
 .index .list .two {
   width: 360px;
   padding-right: 20px;
   margin-right: 20px;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid #ddd;
 }
 .index .list .two img {
   margin-left: -5px;
@@ -775,7 +707,9 @@ h2 .crumbs {
 }
 
 
-
+.filter_helper {
+  padding: 20px 0;
+}
 
 
 

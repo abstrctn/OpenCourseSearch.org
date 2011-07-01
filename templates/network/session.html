@@ -10,24 +10,29 @@
   <div id="content">
     {% include 'network/_search.html' %}
     <div id="results" class="results"></div>
-  <div id="inbox">
   </div>
+  
+  <div class="container landing index">
+    <div class="list clearfix">
+      <div class="item one">
+        <div class="title">
+          <span class="text">Getting started</span>
+        </div>
+        <p>Welcome to Open Course Search for the {{ NETWORK.slug.upper }} network.</p>
+        <p>Has your school's course catalog or registrar's website not been updated since 2002? Now there's an alternative to Just Dealing With It.</p>
+        <p>Start searching for classes by using <span class="special">any keyword</span>: topic, a professor's name, a department...</p>
+      </div>
+      <div class="item" style="width: 470px">
+        <div class="title">
+          <span class="text">Fine tune your results</span>
+        </div>
+        <p>Use <span class="special">filters</span> to find exactly the type of class you're looking for.</p>
+        <div class="filter_helper">
+          <img class="shadowed" src="{{ MEDIA_URL }}img/filter_1.png" />
+          <img style="margin-left: 30px;" class="shadowed" src="{{ MEDIA_URL }}img/filter_2.png" />
+        </div>
+        <p>Try it out by starting to type any of the following: <span class="special">status</span>, <span class="special">professor</span> or  <span class="special">subject</span>.</p>
+      </div>
+    </div>
   </div>
-
-<script type="text/javascript">
-  $(document).ready(function() {
-    /*
-    search.set_vars('{{ NETWORK.slug }}', '{{ session.slug }}');
-    update_stats.set_vars('{{ NETWORK.slug }}', '{{ session.slug }}');
-    search.loading("start");
-    search.populate_facets(function() {
-      search.prepare_facets();
-      search.prepare_stats();
-      search.deactivate();
-      search.loading("stop");
-    });
-    */
-  });
-</script>
-
 {% endblock %}

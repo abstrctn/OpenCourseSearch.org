@@ -148,14 +148,6 @@ OCS.utils.search = function(query, page) {
         OCS.app.resultsView.summary = resultsSummary;
         OCS.app.resultsView.render();
       }
-      /*
-      OCS.app.resultsView = new OCS.view.Results({
-        collection: results,
-        summary: resultsSummary,
-        el: $('#results')
-      });
-      OCS.app.resultsView.render();
-      */
     }
   });
 };
@@ -224,7 +216,7 @@ OCS.model.Results = Backbone.Collection.extend({
 
 OCS.controller = Backbone.Controller.extend({
   routes : {
-    "":                      "search", // #/search
+    //"":                      "search", // #/search
     "/search/":               "search", // #/search
     "/search/:query":         "search", // #/search/biology
     "/search/:query/p:page":  "search", // #/search/biology/p4
@@ -245,6 +237,9 @@ OCS.view.Result = Backbone.View.extend({
     
   },
   template : JST['search_result'],
+  
+  tagName: "div",
+  className: "result clearfix",
   
   events : {
     "click .top": "expandResult"
@@ -279,16 +274,19 @@ OCS.view.Results = Backbone.View.extend({
   },
   
   render : function() {
-    this.updateViews();
     var that = this;
-    $(this.el).empty();
-    $(that.el).append(JST['results_summary'](this.summary.toJSON() ));
-    _(this._resultViews).each(function(dv) {
-      $(that.el).append(dv.render().el);
+    $('.landing').fadeOut('slow', function() {
+      $(that).remove();
+      that.updateViews();
+      $(that.el).empty();
+      $(that.el).append(JST['results_summary'](that.summary.toJSON() ));
+      _(that._resultViews).each(function(dv) {
+        $(that.el).append(dv.render().el);
+      });
+      if (that.summary.attributes.more) {
+        $(that.el).append(JST['more_results'](that.summary.toJSON() ));
+      }
     });
-    if (that.summary.attributes.more) {
-      $(that.el).append(JST['more_results'](this.summary.toJSON() ));
-    }
   },
   
   updateViews: function() {
@@ -325,8 +323,8 @@ window.JST['results_summary'] = _.template('<div class="results_summary">\
 </div>');
 window.JST['more_results'] = _.template('<div class="more-results">More</div>');
 
-window.JST['search_result'] = _.template('<div class="result clearfix result-<%= id %>">\
-  <div class="top clearfix">\
+window.JST['search_result'] = _.template('\
+  <div class="top clearfix result-<%= id %> status-<%= status.replace(/[^-a-zA-Z0-9,&\s]+/ig, "").replace(/\\s/gi, "-").toLowerCase() %>">\
     <div class="names">\
       <p class="course_name"><%= name %></p>\
       <% if (classification.college) { %>\
@@ -394,6 +392,5 @@ window.JST['search_result'] = _.template('<div class="result clearfix result-<%=
       </div>\
     <% } %>\
     </div>\
-  </div>\
-</div>');
+  </div>');
 
