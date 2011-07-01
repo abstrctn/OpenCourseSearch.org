@@ -5,7 +5,7 @@ uwsgi/
 storage/
 logs/
 maintenance/
-networds/settings_files/
+networks/settings_files/
 scrapers/old/
 sources.txt
 zap

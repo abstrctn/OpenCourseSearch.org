@@ -381,12 +381,12 @@ window.JST['search_result'] = _.template('<div class="result clearfix result-<%=
         <% if (available_stats["status.label"]) { %><span class="status"><%= sec.status.label %></span><% } %>\
         <% if (available_stats["name"]) { %><span class="name"><%= sec.name %></span><% } %>\
         \
-        <% if (available_stats["status.seats"]) { %><span class="seats">\
+        <% if (available_stats["status.seats"] && sec.status.seats != null) { %><span class="seats">\
           <%= sec.status.seats.taken %>\
-          <% if (sec.status.seats.total) { %> / <%= sec.status.seats.total %> seats taken<% } %>\
+          <% if (sec.status.seats.total) { %> / <%= sec.status.seats.total %> taken<% } %>\
         </span><% } %>\
         \
-        <% if (available_stats["status.waitlist"]) { %><span class="waitlist">\
+        <% if (available_stats["status.waitlist"] && sec.status.waitlist != null) { %><span class="waitlist">\
           <%= sec.status.waitlist.taken %> on waitlist\
         </span><% } %>\
         \

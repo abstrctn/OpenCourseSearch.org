@@ -26,6 +26,9 @@ body {
 .header .logo-nyu {
   background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/nyu.png') no-repeat;
 }
+.header .logo-uva {
+  background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/uva.png') no-repeat;
+}
 .header .logo-unl {
   background: url('http://opencoursesearch.org.s3.amazonaws.com/logos/unl.png') no-repeat;
 }
@@ -164,10 +167,12 @@ body {
 #results .result .extra .sections .section .location {width: 80px;}
 /*#results .result .extra .sections .section span.days {width: 120px;}
 #results .result .extra .sections .section span.times {width: 130px;}*/
-#results .result .extra .sections .section span.prof {width: 150px;}
-#results .result .extra .sections .section span.units {width: 60px;}
+#results .result .extra .sections .section span.prof {width: 120px;}
+#results .result .extra .sections .section span.units {width: 56px;}
 #results .result .extra .sections .section span.name {width: 100px;}
 #results .result .extra .sections .section span.component {width: 70px;}
+#results .result .extra .sections .section span.seats {width: 70px;}
+#results .result .extra .sections .section span.waitlist {width: 80px;}
 #results .result .extra .sections .section span.percentage {width: 150px;}
 #results .result .extra .sections .section .notes {color: #888; clear: both; padding: 4px 0px;}
 #results .result .extra .sections .section:hover .notes {color: #444;}

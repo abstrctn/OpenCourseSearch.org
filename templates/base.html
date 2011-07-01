@@ -65,21 +65,6 @@
   <div class="clearfix" style="width: 960px; margin: 0 auto;">
     <div class="search-counts">
       <span>Searching {{ total_courses|intcomma }} courses, {{ total_sections|intcomma }} sections.</span>
-      {% if NETWORK.slug and NETWORK.slug != 'home' and session %}
-      {% comment %}
-        <div class="session-switcher-current">{{ session.name }}</div>
-        <ul class="session-switcher">
-          {% for s in NETWORK.active_sessions %}
-            {% if s != session %}
-            <li class="option"><a href="{{ s.get_absolute_url }}">{{ s.name }}</a></li>
-            {% endif %}
-          {% endfor %}
-          {% if NETWORK.active_sessions|length == 1 %}
-            <li>Just the one for now!</li>
-          {% endif %}
-        </ul>
-      {% endcomment %}
-      {% endif %}
     </div>
     <span class="tagline">A more sensible search solution for {% firstof INSTITUTION "your school" %}.</span>
     <span class="page-loading">Loading...</span>
