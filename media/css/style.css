@@ -560,6 +560,8 @@ h2 .crumbs {
   width: 960px;
   margin: 0 auto;
   padding: 10px 0px 0px 0px;
+}
+#content.searches {
   border-left: 1px solid #e0e0e0;
   border-right: 1px solid #e0e0e0;
   border-bottom: 1px solid #e0e0e0;
@@ -619,7 +621,6 @@ h2 .crumbs {
 /* index */
 
 .shadowed {box-shadow: 0 2px 12px rgba(0,0,0,0.35); -moz-box-shadow: 0 2px 12px rgba(0,0,0,0.35); -webkit-box-shadow: 0 2px 12px rgba(0,0,0,0.35);}
-.frontpage {border: none !important;}
 
 .index {
   clear: both;
