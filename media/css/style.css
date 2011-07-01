@@ -323,7 +323,6 @@ ul.nav li a:hover {
   font-size: 15px;
   line-height: 19px;
   margin-bottom: 30px;
-  border-top: 1px dashed #888;
 }
 .bodycontent p {
   margin-bottom: 8px;
@@ -522,7 +521,6 @@ ul.session-switcher li a {
 }
 
 .stats {
-  border-top: 1px dashed #aaa;
   padding-top: 10px;
   min-height: 230px;
 }
@@ -621,6 +619,7 @@ h2 .crumbs {
 /* index */
 
 .shadowed {box-shadow: 0 2px 12px rgba(0,0,0,0.35); -moz-box-shadow: 0 2px 12px rgba(0,0,0,0.35); -webkit-box-shadow: 0 2px 12px rgba(0,0,0,0.35);}
+.frontpage {border: none !important;}
 
 .index {
   clear: both;
